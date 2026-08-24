@@ -6,6 +6,7 @@ from __future__ import annotations
 import io
 import math
 import re
+import time
 import zipfile
 from pathlib import Path
 from typing import Any
@@ -48,9 +49,19 @@ def ensure_cancer_ihc_cache(session: requests.Session | None = None) -> Path:
         return CANCER_IHC_CACHE
 
     sess = session or requests.Session()
-    sess.headers.setdefault("User-Agent", "NovelTargetExplorer/1.0")
-    response = sess.get(HPA_CANCER_IHC_ZIP, timeout=TIMEOUT)
-    response.raise_for_status()
+    sess.headers.setdefault("User-Agent", "Mozilla/5.0 (compatible; ImmunoTargetExplorer/1.0; research use)")
+    sess.headers.setdefault("Connection", "close")
+    last = None
+    for attempt in range(4):
+        try:
+            response = sess.get(HPA_CANCER_IHC_ZIP, timeout=(12, 120))
+            response.raise_for_status()
+            break
+        except (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError) as exc:
+            last = exc
+            time.sleep(0.7 * (2 ** attempt))
+    else:
+        raise ConnectionError("Could not download HPA IHC cache. Search again in a moment.") from last
     with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
         inner = zf.namelist()[0]
         CANCER_IHC_CACHE.write_bytes(zf.read(inner))

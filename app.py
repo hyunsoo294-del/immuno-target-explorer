@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import importlib
 import sys
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -746,11 +747,26 @@ def run_lookup(user_text: str) -> None:
         return
 
     with st.spinner(f"Loading HPA, GTEx, TCGA, CPTAC and Open Targets for {gene}..."):
-        try:
-            bundle = collect_and_save(gene)
-        except Exception as exc:
+        bundle = None
+        last_error = None
+        for attempt in range(3):
+            try:
+                bundle = collect_and_save(gene)
+                last_error = None
+                break
+            except Exception as exc:
+                last_error = exc
+                time.sleep(1.2 * (attempt + 1))
+        if bundle is None:
             st.session_state.messages.append(
-                {"role": "assistant", "content": f"Lookup failed for **{gene}**.\n\n`{exc}`"}
+                {
+                    "role": "assistant",
+                    "content": (
+                        f"Lookup failed for **{gene}**. "
+                        "The public database closed the connection. Wait a few seconds and search again.\n\n"
+                        f"`{last_error}`"
+                    ),
+                }
             )
             return
 

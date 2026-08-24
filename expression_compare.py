@@ -14,6 +14,7 @@ import pandas as pd
 import requests
 
 from csv_io import read_csv_safe
+from data_sources import _request
 from data_qc import (
     RNA_PSEUDOCOUNT,
     drop_ihc_pseudocount_fold,
@@ -96,8 +97,7 @@ def _ensure_hpa_file(key: str, session: requests.Session) -> Path:
     dest = CACHE_DIR / inner_name
     if dest.exists() and dest.stat().st_size > 1000:
         return dest
-    response = session.get(url, timeout=TIMEOUT)
-    response.raise_for_status()
+    response = _request(session, "GET", url, timeout=(12, 180))
     with zipfile.ZipFile(io.BytesIO(response.content)) as zf:
         dest.write_bytes(zf.read(zf.namelist()[0]))
     return dest

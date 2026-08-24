@@ -4,12 +4,15 @@
 from __future__ import annotations
 
 import re
+import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 OT_GRAPHQL = "https://api.platform.opentargets.org/api/v4/graphql"
 HPA_JSON = "https://www.proteinatlas.org/{ensembl}.json"
@@ -20,10 +23,11 @@ LOCAL_SAVE_DIR = Path(__file__).resolve().parent / "expression_csv"
 SAVE_DIR = LOCAL_SAVE_DIR
 DRIVE_SAVE_DIR = Path(r"G:\내 드라이브\Novel Target Database For cursor") / "expression_csv"
 BUNDLE_VERSION = 3
-TIMEOUT = 45
+TIMEOUT = (12, 90)
 HEADERS = {
-    "Content-Type": "application/json",
-    "User-Agent": "NovelTargetExplorer/1.0 (research; educational use)",
+    "User-Agent": "Mozilla/5.0 (compatible; ImmunoTargetExplorer/1.0; research use)",
+    "Accept": "application/json, text/plain, */*",
+    "Connection": "close",
 }
 
 GENE_ALIASES = {
@@ -119,16 +123,48 @@ def save_dirs() -> list[Path]:
 def _session() -> requests.Session:
     s = requests.Session()
     s.headers.update(HEADERS)
+    retry_kw = dict(
+        total=5,
+        connect=5,
+        read=5,
+        backoff_factor=0.8,
+        status_forcelist=(429, 500, 502, 503, 504),
+        raise_on_status=False,
+    )
+    try:
+        retry = Retry(allowed_methods=frozenset(["GET", "POST"]), **retry_kw)
+    except TypeError:
+        retry = Retry(method_whitelist=frozenset(["GET", "POST"]), **retry_kw)
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=8, pool_maxsize=8)
+    s.mount("https://", adapter)
+    s.mount("http://", adapter)
     return s
 
 
+def _request(session: requests.Session, method: str, url: str, **kwargs) -> requests.Response:
+    kwargs.setdefault("timeout", TIMEOUT)
+    last: Exception | None = None
+    for attempt in range(5):
+        try:
+            response = session.request(method, url, **kwargs)
+            response.raise_for_status()
+            return response
+        except (requests.ConnectionError, requests.Timeout, requests.exceptions.ChunkedEncodingError) as exc:
+            last = exc
+            time.sleep(0.6 * (2 ** attempt))
+    raise ConnectionError(
+        "A public database closed the connection. Wait a few seconds and search again."
+    ) from last
+
+
 def graphql(session: requests.Session, query: str, variables: dict[str, Any]) -> dict[str, Any]:
-    response = session.post(
+    response = _request(
+        session,
+        "POST",
         OT_GRAPHQL,
         json={"query": query, "variables": variables},
-        timeout=TIMEOUT,
+        headers={"Content-Type": "application/json"},
     )
-    response.raise_for_status()
     payload = response.json()
     if payload.get("errors"):
         messages = "; ".join(err.get("message", str(err)) for err in payload["errors"])
@@ -155,6 +191,9 @@ def extract_gene_query(text: str) -> str | None:
             continue
         return GENE_ALIASES.get(token, token)
     return None
+
+
+extract_gene_query = extract_gene_query
 
 
 def resolve_target(session: requests.Session, query: str) -> dict[str, str]:
@@ -318,8 +357,7 @@ def association_rows_from_open_targets(target: dict[str, Any]) -> list[dict[str,
 
 def fetch_hpa(session: requests.Session, ensembl_id: str, symbol: str) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     try:
-        response = session.get(HPA_JSON.format(ensembl=ensembl_id), timeout=TIMEOUT)
-        response.raise_for_status()
+        response = _request(session, "GET", HPA_JSON.format(ensembl=ensembl_id))
         info = response.json()
     except Exception:
         return [], {}
@@ -392,20 +430,19 @@ def fetch_hpa(session: requests.Session, ensembl_id: str, symbol: str) -> tuple[
 
 def fetch_gtex_normal(session: requests.Session, ensembl_id: str, symbol: str) -> list[dict[str, Any]]:
     try:
-        gene_res = session.get(GTEX_GENE, params={"geneId": ensembl_id, "pageSize": 5}, timeout=TIMEOUT)
-        gene_res.raise_for_status()
+        gene_res = _request(session, "GET", GTEX_GENE, params={"geneId": ensembl_id, "pageSize": 5})
         genes = (gene_res.json() or {}).get("data") or []
         if not genes:
             return []
         gencode_id = genes[0].get("gencodeId")
         if not gencode_id:
             return []
-        exp_res = session.get(
+        exp_res = _request(
+            session,
+            "GET",
             GTEX_MEDIAN,
             params={"gencodeId": gencode_id, "datasetId": "gtex_v8"},
-            timeout=TIMEOUT,
         )
-        exp_res.raise_for_status()
         items = (exp_res.json() or {}).get("data") or exp_res.json()
         if isinstance(items, dict):
             items = items.get("medianGeneExpression") or items.get("data") or []
