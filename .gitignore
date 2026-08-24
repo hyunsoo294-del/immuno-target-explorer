@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+expression_csv/
+cache/
+*.pptx
+_ppt_preview/
+.streamlit/credentials.toml
+.DS_Store
+Thumbs.db
