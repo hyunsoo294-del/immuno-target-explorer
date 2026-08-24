@@ -22,7 +22,7 @@ GTEX_MEDIAN = "https://gtexportal.org/api/v2/expression/medianGeneExpression"
 LOCAL_SAVE_DIR = Path(__file__).resolve().parent / "expression_csv"
 SAVE_DIR = LOCAL_SAVE_DIR
 DRIVE_SAVE_DIR = Path(r"G:\내 드라이브\Novel Target Database For cursor") / "expression_csv"
-BUNDLE_VERSION = 3
+BUNDLE_VERSION = 4
 TIMEOUT = (12, 90)
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (compatible; ImmunoTargetExplorer/1.0; research use)",
@@ -88,6 +88,19 @@ GENE_ALIASES = {
     "CD96": "CD96",
     "CD112": "NECTIN2",
     "NECTIN2": "NECTIN2",
+    "TROP2": "TACSTD2",
+    "TROP-2": "TACSTD2",
+    "TACSTD2": "TACSTD2",
+    "FOLR1": "FOLR1",
+    "FRALPHA": "FOLR1",
+    "FRα": "FOLR1",
+    "NECTIN4": "NECTIN4",
+    "MSLN": "MSLN",
+    "MESOTHELIN": "MSLN",
+    "CLDN18": "CLDN18",
+    "CLAUDIN18": "CLDN18",
+    "PSMA": "FOLH1",
+    "FOLH1": "FOLH1",
 }
 
 CANCER_WORDS = (
@@ -393,6 +406,7 @@ def fetch_hpa(session: requests.Session, ensembl_id: str, symbol: str) -> tuple[
         "Gene description": info.get("Gene description"),
         "Disease involvement": info.get("Disease involvement"),
         "Protein class": info.get("Protein class"),
+        "Subcellular location": info.get("Subcellular location") or info.get("Subcellular location predicted"),
     }
 
     prognostics = []
@@ -554,6 +568,19 @@ def collect_and_save(gene_query: str) -> dict[str, Any]:
     )
     tcga_summary_df = build_tcga_summary(tcga_df)
     cptac_df, cptac_summary_df, cptac_error = collect_cptac_for_gene(session, symbol, ensembl_id)
+    from taa_character import collect_taa_character
+
+    try:
+        character = collect_taa_character(
+            session,
+            symbol=symbol,
+            ensembl_id=ensembl_id,
+            gene_name=identity.get("name") or "",
+            hpa_summary=hpa_summary,
+        )
+    except Exception as exc:
+        character = {"symbol": symbol, "ensembl_id": ensembl_id, "error": str(exc), "papers": [], "uniprot": {}}
+    character_error = character.get("error")
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d")
     stem = _safe_filename(symbol)
 
@@ -598,6 +625,8 @@ def collect_and_save(gene_query: str) -> dict[str, Any]:
         "analytics_csv": saved_analytics[0] if saved_analytics else "",
         "comparison_csv": saved_compare[0] if saved_compare else "",
         "cptac_csv": saved_cptac[0] if saved_cptac else "",
+        "character": character,
+        "character_error": character_error,
         "retrieved_at": datetime.now(timezone.utc).strftime("%Y-%m-%d"),
         "bundle_version": BUNDLE_VERSION,
         "all_expression_csv": saved_expr,

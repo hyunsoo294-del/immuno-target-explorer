@@ -68,6 +68,13 @@ def _used_sources(bundle: dict[str, Any]) -> set[str]:
             used.add("gtex")
         if sources.str.contains("hpa|protein atlas", na=False).any():
             used.add("hpa")
+    character = bundle.get("character") or {}
+    if character.get("uniprot") or character.get("internalization_call"):
+        used.add("uniprot")
+    if character.get("papers") or character.get("internalization_call"):
+        used.add("pubmed")
+    if character.get("hpa_location"):
+        used.add("hpa")
     return used
 
 
@@ -123,10 +130,35 @@ def _catalog(symbol: str, ensembl: str, retrieved: str) -> dict[str, str]:
             f"doi:10.1093/nar/gkac958. Gene identifier {ensembl} ({symbol}). "
             f"Accessed {retrieved}. Available from: {ensembl_url}"
         ),
+        "uniprot": (
+            f"UniProt Consortium. UniProt: the Universal Protein Knowledgebase in 2023. "
+            f"Nucleic Acids Res. 2023;51(D1):D523-D531. doi:10.1093/nar/gkac1052. "
+            f"Reviewed human entry for {symbol} ({ensembl}). "
+            f"Accessed {retrieved}. Available from: https://www.uniprot.org/"
+        ),
+        "pubmed": (
+            "Europe PMC Consortium. Europe PMC: a full-text literature database for the life sciences "
+            "and platform for innovation. Nucleic Acids Res. 2015;43(Database issue):D1042-D1048. "
+            "doi:10.1093/nar/gku1061. Sayers EW, Beck J, Bolton EE, et al. Database resources of the "
+            "National Center for Biotechnology Information. Nucleic Acids Res. 2024;52(D1):D33-D44. "
+            f"doi:10.1093/nar/gkad1044. PubMed / Europe PMC internalization literature for {symbol}. "
+            f"Accessed {retrieved}. Available from: https://europepmc.org/ and https://pubmed.ncbi.nlm.nih.gov/"
+        ),
     }
 
 
-SOURCE_ORDER = ("ensembl", "hpa", "gtex", "tcga", "cbioportal", "opentargets", "cptac", "pdc")
+SOURCE_ORDER = (
+    "ensembl",
+    "hpa",
+    "gtex",
+    "tcga",
+    "cbioportal",
+    "opentargets",
+    "cptac",
+    "pdc",
+    "uniprot",
+    "pubmed",
+)
 
 
 class ReferenceSet:

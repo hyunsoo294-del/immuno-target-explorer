@@ -18,7 +18,7 @@ import pptx_export
 import references
 
 # Streamlit can keep old modules after file updates.
-for _mod_name in ("csv_io", "charts", "data_sources", "analysis", "expression_compare", "cptac", "data_qc", "references", "pptx_export", "pptx_assets"):
+for _mod_name in ("csv_io", "charts", "data_sources", "analysis", "expression_compare", "cptac", "data_qc", "references", "pptx_export", "pptx_assets", "taa_character"):
     if _mod_name in sys.modules:
         importlib.reload(sys.modules[_mod_name])
 
@@ -27,7 +27,7 @@ from data_sources import SAVE_DIR, collect_and_save, extract_gene_query
 from pptx_export import build_analysis_pptx
 from references import build_references
 
-BUNDLE_VERSION = 3
+BUNDLE_VERSION = 4
 
 st.set_page_config(
     page_title="Immuno Target Explorer",
@@ -235,6 +235,35 @@ def _ensure_bundle(bundle: dict | None) -> dict | None:
         bundle = _ensure_comparison_data(bundle)
     bundle = _ensure_tcga_data(bundle)
     bundle = _ensure_cptac_data(bundle)
+    bundle = _ensure_character_data(bundle)
+    return bundle
+
+
+def _ensure_character_data(bundle: dict) -> dict:
+    character = bundle.get("character") or {}
+    if character.get("uniprot") or character.get("papers") or character.get("internalization_call"):
+        return bundle
+    identity = bundle.get("identity") or {}
+    symbol = identity.get("symbol")
+    ensembl_id = identity.get("ensembl_id")
+    if not symbol:
+        return bundle
+    try:
+        from data_sources import _session
+        from taa_character import collect_taa_character
+
+        sess = _session()
+        bundle["character"] = collect_taa_character(
+            sess,
+            symbol=symbol,
+            ensembl_id=ensembl_id or "",
+            gene_name=identity.get("name") or "",
+            hpa_summary=bundle.get("hpa_summary") or {},
+        )
+        bundle["character_error"] = None
+    except Exception as exc:
+        bundle["character_error"] = str(exc)
+        bundle["character"] = {"symbol": symbol, "error": str(exc), "papers": [], "uniprot": {}}
     return bundle
 
 
@@ -362,8 +391,8 @@ def summarize_result(bundle: dict) -> str:
     lines = [
         f"**{symbol}** (`{ensembl}`) {refs.mark('ensembl')} - {name}",
         "",
-        "Four analysis panels are ready: **RNA**, **Protein**, **TCGA**, and **IHC pathology (HPA + CPTAC)** "
-        f"{refs.mark('hpa', 'gtex', 'tcga', 'opentargets')}.",
+        "Five analysis panels are ready: **RNA**, **Protein**, **TCGA**, **IHC pathology**, and **TAA character** "
+        f"{refs.mark('hpa', 'gtex', 'tcga', 'opentargets', 'uniprot', 'pubmed')}.",
         "",
     ]
     if not comparison.empty:
@@ -391,6 +420,13 @@ def summarize_result(bundle: dict) -> str:
         lines.append(
             f"- CPTAC top tumor protein {refs.mark('cptac', 'pdc', 'cbioportal')}: **{c['cancer_type']}** "
             f"(median log2 ratio {c['median_log2_ratio']:.2f})"
+        )
+    character = bundle.get("character") or {}
+    if character.get("internalization_call"):
+        loc = (character.get("uniprot") or {}).get("location_class") or character.get("hpa_location") or "n/a"
+        lines.append(
+            f"- TAA character {refs.mark('uniprot', 'pubmed')}: **{character['internalization_call']}** "
+            f"(location {loc})"
         )
     lines.extend(["", "Research use only. Not for clinical decisions."])
     return "\n".join(lines)
@@ -675,6 +711,101 @@ def render_cptac_tab(bundle: dict, panel_key: str) -> None:
     )
 
 
+def render_character_tab(bundle: dict, panel_key: str) -> None:
+    refs = build_references(bundle)
+    st.markdown(f"### TAA character for bispecific / ADC fit {refs.mark('uniprot', 'hpa', 'pubmed')}")
+    st.caption(
+        "Built for TAA x immune-cell bispecifics. UniProt and HPA give topology and size. "
+        "PubMed / Europe PMC abstracts are scanned for internalization and epitope/domain dependence. "
+        "This is literature support, not an experimental internalization assay."
+    )
+    character = bundle.get("character") or {}
+    if bundle.get("character_error") and not character.get("uniprot"):
+        st.warning(f"TAA character could not be loaded. {bundle.get('character_error')}")
+        if st.button("Retry TAA character", key=f"{panel_key}_retry_character"):
+            bundle.pop("character", None)
+            bundle.pop("character_error", None)
+            st.session_state.last_result = _ensure_character_data(bundle)
+            st.rerun()
+        return
+    if not character:
+        st.info("No TAA character yet. Search the gene again or click retry.")
+        if st.button("Load TAA character", key=f"{panel_key}_load_character"):
+            st.session_state.last_result = _ensure_character_data(bundle)
+            st.rerun()
+        return
+
+    uni = character.get("uniprot") or {}
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Location", uni.get("location_class") or "Unknown")
+    size = "-"
+    if uni.get("length_aa") and uni.get("mass_kda"):
+        size = f"{uni['length_aa']} aa / {uni['mass_kda']} kDa"
+    elif uni.get("length_aa"):
+        size = f"{uni['length_aa']} aa"
+    c2.metric("Size", size)
+    c3.metric("Transmembrane helices", str(uni.get("tm_count") if uni.get("tm_count") is not None else "-"))
+    c4.metric("Internalization", character.get("internalization_call") or "n/a")
+
+    st.info(character.get("modality_note") or "")
+    if uni.get("uniprot_url"):
+        st.markdown(f"UniProt: [{uni.get('accession')}]({uni['uniprot_url']}) {refs.mark('uniprot')}")
+
+    left, right = st.columns(2)
+    with left:
+        st.markdown("**Topology / ECD**")
+        ecd = ", ".join(uni.get("ecd_spans") or []) or "-"
+        cyto = ", ".join(uni.get("cyto_spans") or []) or "-"
+        domains = ", ".join(uni.get("domains") or []) or "-"
+        st.markdown(
+            f"- Protein: {uni.get('protein_name') or '-'}\n"
+            f"- Location (UniProt): {uni.get('location_text') or '-'}\n"
+            f"- HPA subcellular: {character.get('hpa_location') or '-'}\n"
+            f"- Signal peptide: {'yes' if uni.get('has_signal') else 'no / unknown'}\n"
+            f"- Extracellular spans: `{ecd}`\n"
+            f"- Cytoplasmic spans: `{cyto}`\n"
+            f"- Domains: {domains}"
+        )
+    with right:
+        st.markdown("**Function (UniProt)**")
+        st.write(uni.get("function") or "No UniProt function text.")
+        if uni.get("keywords"):
+            st.caption("Keywords: " + ", ".join(uni["keywords"]))
+
+    papers = character.get("papers") or []
+    st.markdown(f"**Internalization papers** ({len(papers)}) {refs.mark('pubmed')}")
+    if not papers:
+        st.caption("No PubMed/Europe PMC hits for internalization, endocytosis, or ADC with this gene name.")
+        return
+    rows = []
+    for rec in papers:
+        rows.append(
+            {
+                "year": rec.get("year") or "",
+                "call": rec.get("internalization_call") or "",
+                "title": rec.get("title") or "",
+                "pubmed": rec.get("url") or "",
+                "journal": rec.get("journal") or "",
+                "PMID": rec.get("pmid") or "",
+                "snippet": rec.get("snippet") or "",
+            }
+        )
+    st.dataframe(
+        pd.DataFrame(rows),
+        use_container_width=True,
+        hide_index=True,
+        column_config={
+            "pubmed": st.column_config.LinkColumn("PubMed", display_text="Open"),
+            "snippet": st.column_config.TextColumn("snippet", width="large"),
+        },
+    )
+    st.caption(
+        "Call is from title/abstract wording only. "
+        "'Domain-dependent' means the abstract mentions epitope/domain effects or poor internalization. "
+        "Confirm with in-house pHrodo / ADC kill / surface-persistence assays."
+    )
+
+
 def render_ihc_tab(bundle: dict, panel_key: str) -> None:
     tab_hpa, tab_cptac = st.tabs(["4a. HPA IHC pathology", "4b. CPTAC proteomics (NCI/PDC)"])
     with tab_hpa:
@@ -723,8 +854,8 @@ def render_analytics_panel(bundle: dict, panel_key: str) -> None:
             st.session_state.last_result = bundle
 
     render_ppt_download(bundle, panel_key)
-    tab_rna, tab_protein, tab_tcga, tab_ihc = st.tabs(
-        ["1. RNA expression", "2. Protein expression", "3. TCGA distribution", "4. IHC pathology"]
+    tab_rna, tab_protein, tab_tcga, tab_ihc, tab_char = st.tabs(
+        ["1. RNA expression", "2. Protein expression", "3. TCGA distribution", "4. IHC pathology", "5. Character"]
     )
     with tab_rna:
         render_rna_tab(bundle, panel_key)
@@ -734,6 +865,8 @@ def render_analytics_panel(bundle: dict, panel_key: str) -> None:
         render_tcga_tab(bundle, panel_key)
     with tab_ihc:
         render_ihc_tab(bundle, panel_key)
+    with tab_char:
+        render_character_tab(bundle, panel_key)
     st.divider()
     st.markdown(build_references(bundle).markdown())
 
@@ -746,7 +879,7 @@ def run_lookup(user_text: str) -> None:
         )
         return
 
-    with st.spinner(f"Loading HPA, GTEx, TCGA, CPTAC and Open Targets for {gene}..."):
+    with st.spinner(f"Loading HPA, UniProt, PubMed, TCGA, CPTAC and Open Targets for {gene}..."):
         bundle = None
         last_error = None
         for attempt in range(3):
@@ -791,8 +924,8 @@ init_state()
 
 with st.sidebar:
     st.markdown("### Immuno-oncology explorer")
-    st.caption("HPA / GTEx / TCGA / Open Targets")
-    st.markdown("Search a gene. Results split into RNA, Protein, TCGA, and IHC (HPA + CPTAC) tabs.")
+    st.caption("HPA / GTEx / TCGA / UniProt / PubMed / Open Targets")
+    st.markdown("Search a gene. Results split into RNA, Protein, TCGA, IHC (HPA + CPTAC), and TAA character tabs.")
     st.markdown(f"`{SAVE_DIR}`")
     st.divider()
     st.markdown("**Quick search**")
@@ -825,7 +958,7 @@ if not st.session_state.messages:
         """
         <div class="hero">
             <h1>RNA, Protein, TCGA and IHC analytics</h1>
-            <p>Search a target gene to see normalized tables and biotech-style Plotly charts in four panels.</p>
+            <p>Search a TAA gene to see RNA/protein panels plus localization, size, and internalization literature.</p>
         </div>
         """,
         unsafe_allow_html=True,
