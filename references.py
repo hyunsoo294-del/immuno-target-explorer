@@ -75,6 +75,10 @@ def _used_sources(bundle: dict[str, Any]) -> set[str]:
         used.add("pubmed")
     if character.get("hpa_location"):
         used.add("hpa")
+    if character.get("internalization_pct") is not None or character.get("formula_acid"):
+        used.add("int_assay")
+    if character.get("trials"):
+        used.add("ctgov")
     return used
 
 
@@ -144,6 +148,18 @@ def _catalog(symbol: str, ensembl: str, retrieved: str) -> dict[str, str]:
             f"doi:10.1093/nar/gkad1044. PubMed / Europe PMC internalization literature for {symbol}. "
             f"Accessed {retrieved}. Available from: https://europepmc.org/ and https://pubmed.ncbi.nlm.nih.gov/"
         ),
+        "int_assay": (
+            "Rajan S, et al. Rapid evaluation of antibody fragment endocytosis for antibody fragment-drug conjugates. "
+            "Biomolecules. 2020;10(6):955. doi:10.3390/biom10060955. "
+            "Acid-wash internalization (%) = 100 - ((MFI at 37C / MFI at 4C) x 100); "
+            "confocal internalization (%) = F_in / (F_in + F_out) x 100. "
+            f"Applied as the scoring scale for {symbol} literature percentages. Accessed {retrieved}."
+        ),
+        "ctgov": (
+            f"U.S. National Library of Medicine. ClinicalTrials.gov. "
+            f"ADC / bispecific / internalization studies for {symbol}. "
+            f"Accessed {retrieved}. Available from: https://clinicaltrials.gov/"
+        ),
     }
 
 
@@ -158,6 +174,8 @@ SOURCE_ORDER = (
     "pdc",
     "uniprot",
     "pubmed",
+    "int_assay",
+    "ctgov",
 )
 
 

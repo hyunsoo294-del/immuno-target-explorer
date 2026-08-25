@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import html
 import importlib
 import sys
 import time
@@ -51,6 +52,58 @@ CUSTOM_CSS = """
     .save-note {
         background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46;
         padding: 0.75rem 1rem; border-radius: 12px; margin: 0.6rem 0;
+    }
+    .int-mean {
+        background: #0b1f33;
+        color: #e8eef4;
+        border-radius: 14px;
+        padding: 14px 18px;
+        margin: 0.35rem 0 0.85rem 0;
+        display: flex;
+        align-items: baseline;
+        gap: 14px 22px;
+        flex-wrap: wrap;
+    }
+    .int-mean .num { font-size: 2.05rem; font-weight: 800; color: #5eead4; line-height: 1; }
+    .int-mean .lbl { font-size: 0.95rem; font-weight: 650; }
+    .int-mean .sub { font-size: 0.82rem; color: #b7c6d4; }
+    .kpi-row {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin: 0.6rem 0 0.9rem 0;
+    }
+    .kpi {
+        background: #ffffff;
+        border: 1px solid #d7e1ea;
+        border-radius: 14px;
+        padding: 12px 14px;
+        min-height: 118px;
+    }
+    .kpi-label { font-size: 0.78rem; color: #5b6c7d; font-weight: 600; }
+    .kpi-value {
+        font-size: 1.05rem;
+        font-weight: 700;
+        color: #0b1f33;
+        line-height: 1.35;
+        margin-top: 6px;
+        white-space: normal;
+        overflow: visible;
+        text-overflow: clip;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+    .kpi-sub { font-size: 0.78rem; color: #5b6c7d; margin-top: 6px; line-height: 1.35; white-space: normal; }
+    .int-call {
+        background: #f8fafc;
+        border: 1px solid #d7e1ea;
+        border-radius: 12px;
+        padding: 10px 14px;
+        color: #0b1f33;
+        margin-bottom: 0.7rem;
+    }
+    @media (max-width: 900px) {
+        .kpi-row { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
 </style>
 """
@@ -241,7 +294,9 @@ def _ensure_bundle(bundle: dict | None) -> dict | None:
 
 def _ensure_character_data(bundle: dict) -> dict:
     character = bundle.get("character") or {}
-    if character.get("uniprot") or character.get("papers") or character.get("internalization_call"):
+    if character.get("error") and not character.get("uniprot"):
+        return bundle
+    if character.get("pct_schema", 0) >= 2 and "internalization_pct" in character:
         return bundle
     identity = bundle.get("identity") or {}
     symbol = identity.get("symbol")
@@ -425,8 +480,14 @@ def summarize_result(bundle: dict) -> str:
     if character.get("internalization_call"):
         loc = (character.get("uniprot") or {}).get("location_class") or character.get("hpa_location") or "n/a"
         lines.append(
-            f"- TAA character {refs.mark('uniprot', 'pubmed')}: **{character['internalization_call']}** "
-            f"(location {loc})"
+            f"- TAA character {refs.mark('uniprot', 'pubmed', 'int_assay')}: **{character['internalization_call']}** "
+            f"(location {loc}"
+            + (
+                f", mean internalization {character['internalization_pct']:.0f}%"
+                if character.get("internalization_pct") is not None
+                else ""
+            )
+            + ")"
         )
     lines.extend(["", "Research use only. Not for clinical decisions."])
     return "\n".join(lines)
@@ -711,13 +772,25 @@ def render_cptac_tab(bundle: dict, panel_key: str) -> None:
     )
 
 
+def _kpi_card(label: str, value: str, sub: str = "") -> str:
+    sub_html = f'<div class="kpi-sub">{html.escape(sub)}</div>' if sub else ""
+    return (
+        '<div class="kpi">'
+        f'<div class="kpi-label">{html.escape(label)}</div>'
+        f'<div class="kpi-value">{html.escape(value)}</div>'
+        f"{sub_html}"
+        "</div>"
+    )
+
+
 def render_character_tab(bundle: dict, panel_key: str) -> None:
     refs = build_references(bundle)
-    st.markdown(f"### TAA character for bispecific / ADC fit {refs.mark('uniprot', 'hpa', 'pubmed')}")
+    st.markdown(f"### TAA character for bispecific / ADC fit {refs.mark('uniprot', 'hpa', 'pubmed', 'int_assay')}")
     st.caption(
         "Built for TAA x immune-cell bispecifics. UniProt and HPA give topology and size. "
-        "PubMed / Europe PMC abstracts are scanned for internalization and epitope/domain dependence. "
-        "This is literature support, not an experimental internalization assay."
+        "PubMed / Europe PMC abstracts and ClinicalTrials.gov records are scanned for internalization %. "
+        "Numeric % uses the published acid-wash / confocal formulas, then a weighted mean. "
+        "This is literature support, not an in-house internalization assay."
     )
     character = bundle.get("character") or {}
     if bundle.get("character_error") and not character.get("uniprot"):
@@ -736,18 +809,82 @@ def render_character_tab(bundle: dict, panel_key: str) -> None:
         return
 
     uni = character.get("uniprot") or {}
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Location", uni.get("location_class") or "Unknown")
     size = "-"
     if uni.get("length_aa") and uni.get("mass_kda"):
         size = f"{uni['length_aa']} aa / {uni['mass_kda']} kDa"
     elif uni.get("length_aa"):
         size = f"{uni['length_aa']} aa"
-    c2.metric("Size", size)
-    c3.metric("Transmembrane helices", str(uni.get("tm_count") if uni.get("tm_count") is not None else "-"))
-    c4.metric("Internalization", character.get("internalization_call") or "n/a")
+    pct = character.get("internalization_pct")
+    pct_n = character.get("pct_n") or 0
+    call = character.get("internalization_call") or "n/a"
+    if pct is None:
+        pct_label = "n/a"
+        mean_sub = character.get("pct_note") or "No numeric % in retrieved papers or trials"
+        card_sub = "No extracted % yet"
+    else:
+        pct_label = f"{pct:.0f}%"
+        if character.get("pct_source") == "literature_weighted_mean":
+            lo = character.get("pct_min")
+            hi = character.get("pct_max")
+            rng = f" · range {lo:.0f}-{hi:.0f}%" if lo is not None and hi is not None else ""
+            mean_sub = f"weighted mean of {pct_n} paper/trial values{rng} · acid-wash / confocal scale"
+            card_sub = f"{pct_label} · weighted mean n={pct_n}"
+        elif character.get("pct_source") == "ordinal_map":
+            mean_sub = "no numeric abstracts; literature bin mapped onto the assay scale"
+            card_sub = f"{pct_label} · ordinal estimate"
+        else:
+            mean_sub = character.get("pct_note") or ""
+            card_sub = pct_label
+    st.markdown(
+        '<div class="int-mean">'
+        f'<div class="num">{html.escape(pct_label)}</div>'
+        '<div><div class="lbl">Mean internalization (papers + clinical records)</div>'
+        f'<div class="sub">{html.escape(mean_sub)}</div></div>'
+        "</div>",
+        unsafe_allow_html=True,
+    )
+    trial_n = character.get("trial_count") or 0
+    adc_n = character.get("adc_trial_count") or 0
+    tm_value = str(uni.get("tm_count") if uni.get("tm_count") is not None else "-")
+    cards = "".join(
+        [
+            _kpi_card("Location", uni.get("location_class") or "Unknown"),
+            _kpi_card("Size", size),
+            _kpi_card("Transmembrane helices", tm_value),
+            _kpi_card("% internalization", pct_label, card_sub),
+        ]
+    )
+    st.markdown(f'<div class="kpi-row">{cards}</div>', unsafe_allow_html=True)
+    st.markdown(
+        f'<div class="int-call"><b>Internalization call:</b> {html.escape(str(call))}</div>',
+        unsafe_allow_html=True,
+    )
+    if trial_n:
+        st.caption(
+            f"ClinicalTrials.gov {refs.mark('ctgov')}: {trial_n} ADC / bispecific / internalization studies "
+            f"({adc_n} explicitly ADC or bispecific)."
+        )
 
     st.info(character.get("modality_note") or "")
+    with st.expander("Internalization formula (external assay + literature mean)", expanded=True):
+        st.markdown(
+            f"**Acid-wash / temperature control** {refs.mark('int_assay')}:  \n"
+            f"`% internalization = {character.get('formula_acid') or '100 - ((MFI_37C / MFI_4C) * 100)'}`  \n"
+            "MFI at 4°C is surface-bound antibody with internalization blocked. "
+            "MFI at 37°C is remaining surface signal after uptake."
+        )
+        st.markdown(
+            f"**Confocal** {refs.mark('int_assay')}:  \n"
+            f"`% internalization = {character.get('formula_confocal') or '(F_in / (F_in + F_out)) * 100'}`"
+        )
+        st.markdown(
+            f"**Literature consensus** {refs.mark('pubmed', 'ctgov')}:  \n"
+            f"`mean % = {character.get('formula_mean') or 'sum(w_i * pct_i) / sum(w_i)'}`  \n"
+            "Each paper/trial contributes its median extracted %. "
+            "In-vitro papers weight 2; clinical papers and ClinicalTrials.gov records weight 3."
+        )
+        if character.get("pct_note"):
+            st.caption(character["pct_note"])
     if uni.get("uniprot_url"):
         st.markdown(f"UniProt: [{uni.get('accession')}]({uni['uniprot_url']}) {refs.mark('uniprot')}")
 
@@ -774,36 +911,60 @@ def render_character_tab(bundle: dict, panel_key: str) -> None:
 
     papers = character.get("papers") or []
     st.markdown(f"**Internalization papers** ({len(papers)}) {refs.mark('pubmed')}")
-    if not papers:
-        st.caption("No PubMed/Europe PMC hits for internalization, endocytosis, or ADC with this gene name.")
-        return
-    rows = []
-    for rec in papers:
-        rows.append(
-            {
-                "year": rec.get("year") or "",
-                "call": rec.get("internalization_call") or "",
-                "title": rec.get("title") or "",
-                "pubmed": rec.get("url") or "",
-                "journal": rec.get("journal") or "",
-                "PMID": rec.get("pmid") or "",
-                "snippet": rec.get("snippet") or "",
-            }
+    if papers:
+        rows = []
+        for rec in papers:
+            rows.append(
+                {
+                    "year": rec.get("year") or "",
+                    "call": rec.get("internalization_call") or "",
+                    "% internalization": rec.get("pct_internalization"),
+                    "weight": rec.get("weight"),
+                    "title": rec.get("title") or "",
+                    "pubmed": rec.get("url") or "",
+                    "journal": rec.get("journal") or "",
+                    "PMID": rec.get("pmid") or "",
+                    "snippet": rec.get("snippet") or "",
+                }
+            )
+        st.dataframe(
+            pd.DataFrame(rows),
+            use_container_width=True,
+            hide_index=True,
+            column_config={
+                "pubmed": st.column_config.LinkColumn("PubMed", display_text="Open"),
+                "snippet": st.column_config.TextColumn("snippet", width="large"),
+            },
         )
-    st.dataframe(
-        pd.DataFrame(rows),
-        use_container_width=True,
-        hide_index=True,
-        column_config={
-            "pubmed": st.column_config.LinkColumn("PubMed", display_text="Open"),
-            "snippet": st.column_config.TextColumn("snippet", width="large"),
-        },
-    )
-    st.caption(
-        "Call is from title/abstract wording only. "
-        "'Domain-dependent' means the abstract mentions epitope/domain effects or poor internalization. "
-        "Confirm with in-house pHrodo / ADC kill / surface-persistence assays."
-    )
+        st.caption(
+            "Call is from title/abstract wording. "
+            "% internalization is the median of percentages extracted next to internalization/endocytosis/uptake terms. "
+            "Empty % means the abstract had no usable number. "
+            "Confirm with in-house pHrodo / ADC kill / surface-persistence assays."
+        )
+    else:
+        st.caption("No PubMed/Europe PMC hits for internalization, endocytosis, or ADC with this gene name.")
+    trials = character.get("trials") or []
+    if trials:
+        st.markdown(f"**ClinicalTrials.gov ADC / bispecific / internalization studies** ({len(trials)}) {refs.mark('ctgov')}")
+        trial_rows = []
+        for rec in trials:
+            trial_rows.append(
+                {
+                    "NCT": rec.get("nct_id") or "",
+                    "phase": rec.get("phase") or "",
+                    "status": rec.get("status") or "",
+                    "% internalization": rec.get("pct_internalization"),
+                    "title": rec.get("title") or "",
+                    "link": rec.get("url") or "",
+                }
+            )
+        st.dataframe(
+            pd.DataFrame(trial_rows),
+            use_container_width=True,
+            hide_index=True,
+            column_config={"link": st.column_config.LinkColumn("ClinicalTrials.gov", display_text="Open")},
+        )
 
 
 def render_ihc_tab(bundle: dict, panel_key: str) -> None:
