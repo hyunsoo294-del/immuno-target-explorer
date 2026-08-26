@@ -19,7 +19,7 @@ import pptx_export
 import references
 
 # Streamlit can keep old modules after file updates.
-for _mod_name in ("csv_io", "charts", "data_sources", "analysis", "expression_compare", "cptac", "data_qc", "references", "pptx_export", "pptx_assets", "taa_character"):
+for _mod_name in ("csv_io", "charts", "data_sources", "analysis", "expression_compare", "cptac", "data_qc", "references", "pptx_export", "pptx_assets", "taa_character", "cell_line_protein"):
     if _mod_name in sys.modules:
         importlib.reload(sys.modules[_mod_name])
 
@@ -292,6 +292,38 @@ def _ensure_bundle(bundle: dict | None) -> dict | None:
     return bundle
 
 
+def _ensure_cell_line_protein(bundle: dict) -> dict:
+    cell_df = _as_df(bundle.get("cell_line_protein_df"))
+    if bundle.get("cell_line_protein_loaded"):
+        return bundle
+    identity = bundle.get("identity") or {}
+    symbol = identity.get("symbol")
+    if not symbol:
+        return bundle
+    accession = ((bundle.get("character") or {}).get("uniprot") or {}).get("accession") or ""
+    try:
+        from cell_line_protein import collect_cell_line_protein
+        from data_sources import _session
+
+        sess = _session()
+        cell_df, meta = collect_cell_line_protein(
+            sess,
+            symbol=symbol,
+            ensembl_id=identity.get("ensembl_id") or "",
+            uniprot_accession=accession,
+        )
+        bundle["cell_line_protein_df"] = cell_df
+        bundle["cell_line_protein_meta"] = meta
+        bundle["cell_line_protein_error"] = meta.get("error")
+        bundle["cell_line_protein_loaded"] = True
+    except Exception as exc:
+        bundle["cell_line_protein_error"] = str(exc)
+        bundle["cell_line_protein_df"] = pd.DataFrame()
+        bundle["cell_line_protein_meta"] = {"error": str(exc)}
+        bundle["cell_line_protein_loaded"] = True
+    return bundle
+
+
 def _ensure_character_data(bundle: dict) -> dict:
     character = bundle.get("character") or {}
     if character.get("error") and not character.get("uniprot"):
@@ -489,6 +521,13 @@ def summarize_result(bundle: dict) -> str:
             )
             + ")"
         )
+    cell_lines = _as_df(bundle.get("cell_line_protein_df"))
+    if not cell_lines.empty:
+        top = cell_lines.iloc[0]
+        lines.append(
+            f"- Cell-line protein {refs.mark('procan', 'cellpassports')}: highest **{top.get('cell_line')}** "
+            f"(z = {float(top.get('zscore')):.2f}, {int(len(cell_lines))} lines with z > 0)"
+        )
     lines.extend(["", "Research use only. Not for clinical decisions."])
     return "\n".join(lines)
 
@@ -558,6 +597,7 @@ def render_protein_comparison_tab(bundle: dict, panel_key: str) -> None:
             bundle.pop("comparison_error", None)
             st.session_state.last_result = _ensure_comparison_data(bundle)
             st.rerun()
+        render_cell_line_protein_section(bundle, panel_key)
         return
 
     protein = comparison.dropna(subset=["protein_ihc_cancer_0_3"], how="any").copy()
@@ -574,36 +614,118 @@ def render_protein_comparison_tab(bundle: dict, panel_key: str) -> None:
     if protein.empty:
         st.info(
             "No matched normal-vs-cancer protein IHC comparison for this target. "
-            "Try the **IHC pathology** tab for raw patient counts, or search a gene with HPA protein data (e.g. HER2, PD-L1)."
+            "Cell-line proteomics below still loads when the gene is in ProCan-DepMapSanger."
         )
+    else:
+        render_table(
+            protein,
+            PROTEIN_COLUMNS,
+            {
+                "protein_ihc_normal_0_3": "{:.2f}",
+                "protein_ihc_cancer_0_3": "{:.2f}",
+                "ihc_mwu_pvalue": "{:.3g}",
+                "ihc_mwu_effect": "{:.2f}",
+            },
+            cite=refs.mark("hpa"),
+        )
+        render_plotly(
+            charts.protein_grouped_bar(protein),
+            "Protein IHC normal vs cancer chart unavailable.",
+            key=f"{panel_key}_protein_grouped",
+        )
+        render_plotly(
+            charts.protein_fold_horizontal(protein),
+            "Protein fold induction chart unavailable.",
+            key=f"{panel_key}_protein_fold",
+        )
+        st.caption(
+            f"**IHC statistics** {refs.mark('hpa')}: Scores stay on the ordinal 0-3 scale "
+            "(Not detected=0, Low=1, Medium=2, High=3). "
+            "Tumor vs matched-normal distributions are compared with a Mann-Whitney U test; "
+            "no 0.25 pseudocount fold is applied to IHC."
+        )
+
+    render_cell_line_protein_section(bundle, panel_key)
+
+
+def render_cell_line_protein_section(bundle: dict, panel_key: str) -> None:
+    if not bundle.get("cell_line_protein_loaded"):
+        with st.spinner("Loading cancer cell-line proteomics (ProCan-DepMapSanger)..."):
+            bundle = _ensure_cell_line_protein(bundle)
+            st.session_state.last_result = bundle
+
+    refs = build_references(bundle)
+    meta = bundle.get("cell_line_protein_meta") or {}
+    cell_df = _as_df(bundle.get("cell_line_protein_df"))
+    st.markdown(f"### Cancer cell-line protein {refs.mark('procan', 'cellpassports')}")
+    st.caption(
+        "Open data: ProCan-DepMapSanger DIA-MS protein intensity in 949 human cancer cell lines, "
+        f"via the Cell Model Passports API {refs.mark('procan', 'cellpassports')}. "
+        "Values are log2 protein intensity, then z-scored across cell lines for this protein. "
+        "protein_norm_0_1 rescales z-scores of positive lines to 0-1. "
+        "Lines with missing or z ≤ 0 (at or below the 949-line mean) are hidden."
+    )
+    links = []
+    if meta.get("passports_url"):
+        links.append(f"[Cell Model Passports]({meta['passports_url']})")
+    if meta.get("procan_url"):
+        links.append(f"[ProCan paper]({meta['procan_url']})")
+    if meta.get("hpa_celline_url"):
+        links.append(f"[HPA Cell Line Atlas]({meta['hpa_celline_url']})")
+    if meta.get("depmap_url"):
+        links.append(f"[DepMap]({meta['depmap_url']})")
+    if links:
+        st.markdown(" · ".join(links))
+
+    if cell_df.empty:
+        detail = bundle.get("cell_line_protein_error") or "No positive cell-line protein values."
+        st.info(detail)
+        if st.button("Retry cell-line proteomics", key=f"{panel_key}_retry_cell_prot"):
+            bundle.pop("cell_line_protein_df", None)
+            bundle.pop("cell_line_protein_error", None)
+            bundle.pop("cell_line_protein_meta", None)
+            bundle.pop("cell_line_protein_loaded", None)
+            st.session_state.last_result = _ensure_cell_line_protein(bundle)
+            st.rerun()
         return
 
-    render_table(
-        protein,
-        PROTEIN_COLUMNS,
-        {
-            "protein_ihc_normal_0_3": "{:.2f}",
-            "protein_ihc_cancer_0_3": "{:.2f}",
-            "ihc_mwu_pvalue": "{:.3g}",
-            "ihc_mwu_effect": "{:.2f}",
-        },
-        cite=refs.mark("hpa"),
-    )
-    render_plotly(
-        charts.protein_grouped_bar(protein),
-        "Protein IHC normal vs cancer chart unavailable.",
-        key=f"{panel_key}_protein_grouped",
-    )
-    render_plotly(
-        charts.protein_fold_horizontal(protein),
-        "Protein fold induction chart unavailable.",
-        key=f"{panel_key}_protein_fold",
-    )
+    n_pos = meta.get("n_positive") or len(cell_df)
+    n_meas = meta.get("n_measured") or n_pos
     st.caption(
-        f"**IHC statistics** {refs.mark('hpa')}: Scores stay on the ordinal 0-3 scale "
-        "(Not detected=0, Low=1, Medium=2, High=3). "
-        "Tumor vs matched-normal distributions are compared with a Mann-Whitney U test; "
-        "no 0.25 pseudocount fold is applied to IHC."
+        f"{n_pos} cell lines above the proteome mean (z > 0) out of {n_meas} measured lines "
+        f"for {meta.get('uniprot_id') or ''}."
+    )
+    view = cell_df[
+        [c for c in (
+            "rank",
+            "cell_line",
+            "lineage",
+            "zscore",
+            "protein_norm_0_1",
+            "protein_intensity_log2",
+            "percentile",
+            "passport_url",
+        ) if c in cell_df.columns]
+    ].copy()
+    st.dataframe(
+        view.style.format(
+            {
+                "zscore": "{:.2f}",
+                "protein_norm_0_1": "{:.2f}",
+                "protein_intensity_log2": "{:.2f}",
+                "percentile": "{:.1f}",
+            },
+            na_rep="-",
+        ),
+        use_container_width=True,
+        hide_index=True,
+        column_config={"passport_url": st.column_config.LinkColumn("Cell Model Passports", display_text="Open")},
+    )
+    st.caption(f"Table sources {refs.mark('procan', 'cellpassports')}")
+    render_plotly(
+        charts.cell_line_protein_bar(cell_df),
+        "Cell-line protein chart unavailable.",
+        key=f"{panel_key}_cell_line_protein",
     )
 
 

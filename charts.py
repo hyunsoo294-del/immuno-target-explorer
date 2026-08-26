@@ -253,6 +253,36 @@ def protein_grouped_bar(comparison: pd.DataFrame) -> go.Figure | None:
     return _apply_axes(fig, horizontal=True, height=_chart_height(len(df)), legend="bottom")
 
 
+def cell_line_protein_bar(cell_lines: pd.DataFrame, top_n: int = 25) -> go.Figure | None:
+    if cell_lines is None or cell_lines.empty or "zscore" not in cell_lines.columns:
+        return None
+    df = cell_lines.dropna(subset=["zscore"]).copy()
+    df = df[df["zscore"] > 0].sort_values("zscore", ascending=False).head(top_n)
+    if df.empty:
+        return None
+    df = df.iloc[::-1]
+    fig = go.Figure(
+        go.Bar(
+            y=df["cell_line"],
+            x=df["zscore"],
+            orientation="h",
+            marker_color=CORAL,
+            marker_line_width=0,
+            text=df["zscore"].map(lambda v: f"{v:.2f}"),
+            textposition="outside",
+            cliponaxis=False,
+            customdata=df[["lineage", "protein_norm_0_1"]].fillna(""),
+            hovertemplate="%{y}<br>lineage=%{customdata[0]}<br>z=%{x:.2f}<br>norm 0-1=%{customdata[1]:.2f}<extra></extra>",
+        )
+    )
+    fig.update_layout(
+        title="Cell-line protein (ProCan-DepMapSanger), highest first",
+        xaxis_title="Protein z-score vs 949-line mean",
+        showlegend=False,
+    )
+    return _apply_axes(fig, horizontal=True, height=_chart_height(len(df), per_row=28, minimum=360))
+
+
 def tcga_box(tcga: pd.DataFrame) -> go.Figure | None:
     if tcga is None or tcga.empty:
         return None

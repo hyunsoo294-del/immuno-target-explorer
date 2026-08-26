@@ -79,6 +79,10 @@ def _used_sources(bundle: dict[str, Any]) -> set[str]:
         used.add("int_assay")
     if character.get("trials"):
         used.add("ctgov")
+    cell_lines = _as_df(bundle.get("cell_line_protein_df"))
+    if not cell_lines.empty:
+        used.add("procan")
+        used.add("cellpassports")
     return used
 
 
@@ -160,6 +164,19 @@ def _catalog(symbol: str, ensembl: str, retrieved: str) -> dict[str, str]:
             f"ADC / bispecific / internalization studies for {symbol}. "
             f"Accessed {retrieved}. Available from: https://clinicaltrials.gov/"
         ),
+        "procan": (
+            "Goncalves E, Poulos RC, Cai Z, et al. Pan-cancer proteomic map of 949 human cell lines. "
+            "Cancer Cell. 2022;40(8):835-849.e8. doi:10.1016/j.ccell.2022.06.010. "
+            f"ProCan-DepMapSanger DIA-MS protein abundance for {symbol}. "
+            f"Accessed {retrieved}. Available from: https://doi.org/10.1016/j.ccell.2022.06.010"
+        ),
+        "cellpassports": (
+            "van der Meer D, Barthorpe S, Yang W, et al. Cell Model Passports-a hub for clinical, genetic "
+            "and functional datasets of preclinical cancer models. Nucleic Acids Res. 2019;47(D1):D923-D929. "
+            "doi:10.1093/nar/gky872. "
+            f"Cell Model Passports API proteomics for {symbol}. "
+            f"Accessed {retrieved}. Available from: https://cellmodelpassports.sanger.ac.uk/"
+        ),
     }
 
 
@@ -176,6 +193,8 @@ SOURCE_ORDER = (
     "pubmed",
     "int_assay",
     "ctgov",
+    "procan",
+    "cellpassports",
 )
 
 
