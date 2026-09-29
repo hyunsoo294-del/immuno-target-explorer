@@ -39,6 +39,7 @@ from taa_analysis.molecules import (
     tme_catalog_eligible,
 )
 from taa_analysis.pipeline import coverage_table, export_frame, immune_composition_result
+from taa_analysis.score import score_cell_line_groups
 from taa_analysis.settings import load_settings
 from taa_analysis.transforms import TransformError, convert_stored_expression
 from taa_analysis.xena import RetrievalFailed
@@ -408,6 +409,61 @@ class CellLineFactorTests(unittest.TestCase):
         self.assertEqual(int(breast["n_cell_lines"]), 1)
         self.assertAlmostEqual(float(breast["median_nTPM"]), 8.0)
         self.assertEqual(breast["unit"], "log2(nTPM+1)")
+
+
+class CellLineScoreTests(unittest.TestCase):
+    def _lines(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            [
+                {"cell_line": "MCF-7", "group_label": "Breast Carcinoma", "nTPM": 10},
+                {"cell_line": "BT-474", "group_label": "Breast Carcinoma", "nTPM": 30},
+                {"cell_line": "A549", "group_label": "Lung Adenocarcinoma", "nTPM": 1},
+                {"cell_line": "H460", "group_label": "Lung Adenocarcinoma", "nTPM": 1},
+                {"cell_line": "NORM", "group_label": "Non-Cancerous", "nTPM": 500},
+                {"cell_line": "X", "group_label": "Unknown", "nTPM": 800},
+                {"cell_line": "BAD", "group_label": "Breast Carcinoma", "nTPM": -3},
+            ]
+        )
+
+    def test_score_uses_cancer_lines_and_ranks_higher_expression(self):
+        scored = score_cell_line_groups(self._lines())
+        self.assertTrue(set(scored.loc[~scored["scored"], "cancer"]) >= {"Unknown", "Non-Cancerous"})
+        breast = scored[scored["cancer"] == "Breast Carcinoma"].iloc[0]
+        lung = scored[scored["cancer"] == "Lung Adenocarcinoma"].iloc[0]
+        self.assertEqual(int(breast["n_cell_lines"]), 3)
+        self.assertEqual(int(breast["n_measured"]), 2)
+        self.assertAlmostEqual(float(breast["median_nTPM"]), 20.0)
+        self.assertAlmostEqual(float(breast["detected_fraction"]), 1.0)
+        self.assertGreater(float(breast["score"]), float(lung["score"]))
+        self.assertGreater(float(breast["selectivity_log2"]), 0)
+        self.assertLess(float(lung["selectivity_log2"]), 0)
+        self.assertTrue(0 <= float(breast["score"]) <= 100)
+        self.assertEqual(scored.iloc[0]["cancer"], "Breast Carcinoma")
+        held = scored[scored["cancer"] == "Non-Cancerous"].iloc[0]
+        self.assertTrue(pd.isna(held["score"]))
+
+    def test_single_cancer_score_omits_selectivity(self):
+        lines = pd.DataFrame(
+            [
+                {"cell_line": "A", "group_label": "Melanoma", "nTPM": 8},
+                {"cell_line": "B", "group_label": "Melanoma", "nTPM": 0},
+            ]
+        )
+        scored = score_cell_line_groups(lines).iloc[0]
+        self.assertTrue(pd.isna(scored["selectivity_log2"]))
+        self.assertAlmostEqual(float(scored["detected_fraction"]), 0.5)
+        self.assertIsNotNone(scored["score"])
+        self.assertTrue(float(scored["score"]) > 0)
+
+    def test_empty_measurements_have_no_score(self):
+        lines = pd.DataFrame(
+            [
+                {"cell_line": "A", "group_label": "Melanoma", "nTPM": None},
+            ]
+        )
+        scored = score_cell_line_groups(lines).iloc[0]
+        self.assertTrue(pd.isna(scored["score"]))
+        self.assertTrue(pd.isna(scored["median_nTPM"]))
 
 
 if __name__ == "__main__":
