@@ -251,7 +251,10 @@ def render_taa_analysis() -> None:
                 if column in bundle["patients"].columns
             ]
             with st.expander("세포주 목록 / Cell lines"):
-                st.dataframe(bundle["patients"][line_columns], width="stretch", hide_index=True)
+                line_table = bundle["patients"][line_columns]
+                if "nTPM" in line_table.columns:
+                    line_table = line_table.sort_values("nTPM", ascending=False)
+                st.dataframe(line_table, width="stretch", hide_index=True)
         _downloads("cancer", bundle["summary"], bundle["patients"], meta, mode)
         with st.expander("커버리지 / Coverage"):
             st.dataframe(bundle["coverage"], width="stretch", hide_index=True)
