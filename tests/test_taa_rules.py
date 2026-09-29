@@ -1,0 +1,279 @@
+# -*- coding: utf-8 -*-
+"""Calculation checks. Synthetic rows stay in tests and are not user results."""
+
+from __future__ import annotations
+
+import io
+import tempfile
+import unittest
+from pathlib import Path
+
+import pandas as pd
+
+from taa_analysis.aliases import target_identity
+from taa_analysis.charts import matplotlib_png
+from taa_analysis.cohort import select_one_sample_per_patient
+from taa_analysis.composition import (
+    all_cell_percentage_status,
+    complete_rows,
+    component_medians,
+    mean_complete_composition,
+    same_sample_all_cell_fraction,
+    whole_tumor_fraction_allowed,
+)
+from taa_analysis.joins import JoinError, safe_left_join
+from taa_analysis.molecules import (
+    is_enrichment_summary_field,
+    load_hpa_immune_cell_table,
+    rna_detection_rate,
+    summarize_cells_by_patient,
+    tme_catalog_eligible,
+)
+from taa_analysis.pipeline import coverage_table, export_frame, immune_composition_result
+from taa_analysis.settings import load_settings
+from taa_analysis.transforms import TransformError, convert_stored_expression
+from taa_analysis.xena import RetrievalFailed
+
+
+class AliasTests(unittest.TestCase):
+    def test_her2_and_erbb2_share_target(self):
+        her2 = target_identity("HER2")
+        erbb2 = target_identity("ERBB2")
+        self.assertEqual(her2["gene_symbol"], erbb2["gene_symbol"])
+        self.assertEqual(her2["gene_id"], erbb2["gene_id"])
+        self.assertEqual(her2["gene_symbol"], "ERBB2")
+
+
+class TransformTests(unittest.TestCase):
+    def test_log2_tpm_0001_round_trip(self):
+        stored = convert_stored_expression(0.0, "log2(tpm+0.001)")
+        self.assertAlmostEqual(stored["tpm"], 0.999, places=3)
+        self.assertAlmostEqual(stored["display_value"], 0.999, places=2)
+        back = convert_stored_expression(stored["display_value"], "log2(TPM+1)")
+        self.assertEqual(back["display_value"], stored["display_value"])
+        self.assertIn("not logged again", back["formula"])
+
+    def test_known_tpm_one(self):
+        import math
+
+        stored = math.log2(1.001)
+        converted = convert_stored_expression(stored, "log2(tpm+0.001)")
+        self.assertAlmostEqual(converted["tpm"], 1.0, places=6)
+        self.assertAlmostEqual(converted["display_value"], 1.0, places=6)
+
+    def test_negative_back_transform_is_error(self):
+        with self.assertRaises(TransformError):
+            convert_stored_expression(-20, "log2(tpm+0.001)")
+
+    def test_other_units_are_not_relabeled(self):
+        for unit in ("nTPM", "FPKM", "log2(fpkm+0.001)", "RSEM expected_count", "microarray"):
+            with self.assertRaises(TransformError):
+                convert_stored_expression(3.5, unit)
+
+
+class JoinTests(unittest.TestCase):
+    def test_duplicate_keys_do_not_expand(self):
+        left = pd.DataFrame({"sample_id": ["A"], "x": [1]})
+        right = pd.DataFrame({"sample_id": ["A", "A"], "subtype_label": ["LumA", "Basal"]})
+        with self.assertRaises(JoinError):
+            safe_left_join(left, right, "sample_id")
+
+    def test_unique_join_keeps_row_count(self):
+        left = pd.DataFrame({"sample_id": ["A", "B"], "x": [1, 2]})
+        right = pd.DataFrame({"sample_id": ["A"], "subtype_label": ["Luminal A"]})
+        merged = safe_left_join(left, right, "sample_id")
+        self.assertEqual(len(merged), 2)
+        self.assertEqual(merged.loc[merged["sample_id"] == "B", "subtype_label"].isna().all(), True)
+
+
+class PatientTests(unittest.TestCase):
+    def test_annotated_sample_is_preferred_without_copying(self):
+        frame = pd.DataFrame(
+            {
+                "patient_id": ["P", "P"],
+                "sample_id": ["S1", "S2"],
+                "subtype_label": ["Unknown", "Luminal A"],
+            }
+        )
+        chosen = select_one_sample_per_patient(frame, "subtype_label")
+        self.assertEqual(len(chosen), 1)
+        self.assertEqual(chosen.iloc[0]["sample_id"], "S2")
+        self.assertEqual(float(chosen.iloc[0]["aggregation_weight"]), 1.0)
+        self.assertEqual(int(chosen.iloc[0]["samples_collapsed"]), 2)
+
+
+class CompositionTests(unittest.TestCase):
+    def test_complete_mean_sums_to_one_and_medians_are_not_forced(self):
+        frame = pd.DataFrame(
+            [
+                {"T": 0.5, "B": 0.5, "NK": 0.0},
+                {"T": 0.5, "B": 0.0, "NK": 0.5},
+                {"T": 0.0, "B": 0.5, "NK": 0.5},
+            ]
+        )
+        columns = ["T", "B", "NK"]
+        means = mean_complete_composition(frame, columns)
+        self.assertAlmostEqual(float(means.sum()), 1.0, places=6)
+        medians = component_medians(frame, columns)
+        self.assertAlmostEqual(float(medians.sum()), 1.5, places=6)
+        self.assertNotAlmostEqual(float(medians.sum()), 1.0, places=2)
+
+    def test_missing_component_is_not_zero(self):
+        frame = pd.DataFrame(
+            [
+                {"T": 0.4, "B": 0.6},
+                {"T": 0.2, "B": None},
+            ]
+        )
+        complete = complete_rows(frame, ["T", "B"])
+        self.assertEqual(len(complete), 1)
+        self.assertAlmostEqual(float(complete.iloc[0]["T"]), 0.4)
+
+    def test_relative_and_scores_cannot_become_all_cell_percent(self):
+        for algorithm in ("CIBERSORT_LM22_relative", "xCell", "ESTIMATE", "CIBERSORT_absolute_score"):
+            status = all_cell_percentage_status(algorithm)
+            self.assertEqual(status["status"], "Unavailable")
+            self.assertEqual(status["missing_reason"], "unsupported")
+
+    def test_product_rule_is_same_sample_only(self):
+        self.assertAlmostEqual(same_sample_all_cell_fraction(0.30, 0.20, same_sample=True, same_definition=True), 0.06)
+        with self.assertRaises(Exception):
+            same_sample_all_cell_fraction(0.30, 0.20, same_sample=False, same_definition=True)
+
+    def test_enriched_dataset_has_no_whole_tumor_fraction(self):
+        self.assertFalse(whole_tumor_fraction_allowed("CD45 enrichment"))
+        self.assertFalse(whole_tumor_fraction_allowed("immune-only"))
+        self.assertTrue(whole_tumor_fraction_allowed("unselected dissociated tumor"))
+
+
+class MoleculeTests(unittest.TestCase):
+    def test_detection_rejects_scaled_layers(self):
+        with self.assertRaises(Exception):
+            rna_detection_rate(pd.Series([0.2, -1.0, 1.4]), "scaled z-score")
+
+    def test_detection_uses_raw_counts(self):
+        rate = rna_detection_rate(pd.Series([0, 2, 0, 5]), "raw counts")
+        self.assertAlmostEqual(rate, 0.5)
+
+    def test_zero_is_not_unavailable_and_empty_patient_is_not_zero(self):
+        frame = pd.DataFrame(
+            {
+                "patient_id": ["A", "A", "B"],
+                "value": [0.0, 4.0, None],
+            }
+        )
+        # Patient B has a row but no numeric value: unavailable, not a zero mean.
+        summary = summarize_cells_by_patient(frame.dropna(subset=["value"]), "value")
+        pooled = summarize_cells_by_patient(frame.dropna(subset=["value"]), "value")
+        self.assertAlmostEqual(summary["patient_mean"], 2.0)
+        self.assertAlmostEqual(pooled["pooled_mean"], 2.0)
+        absent = summarize_cells_by_patient(pd.DataFrame(columns=["patient_id", "value"]), "value")
+        self.assertIsNone(absent["patient_mean"])
+        self.assertEqual(absent["status"], "Unavailable")
+        self.assertNotEqual(absent["patient_mean"], 0)
+
+    def test_one_donor_does_not_define_the_patient_mean_alone_when_others_exist(self):
+        frame = pd.DataFrame(
+            {
+                "patient_id": ["deep"] * 10 + ["small"],
+                "value": [10.0] * 10 + [0.0],
+            }
+        )
+        summary = summarize_cells_by_patient(frame, "value")
+        self.assertAlmostEqual(summary["patient_mean"], 5.0)
+        self.assertAlmostEqual(summary["pooled_mean"], 10.0 * 10 / 11)
+        self.assertNotAlmostEqual(summary["patient_mean"], summary["pooled_mean"])
+
+    def test_catalog_filters(self):
+        self.assertFalse(tme_catalog_eligible("heart", "normal"))
+        self.assertFalse(tme_catalog_eligible("cerebellum", "normal tissue"))
+        self.assertFalse(tme_catalog_eligible("PBMC", "blood"))
+        self.assertTrue(tme_catalog_eligible("breast", "primary tumor"))
+
+    def test_enrichment_summary_is_not_a_matrix(self):
+        self.assertTrue(is_enrichment_summary_field("RNA blood cell specific nTPM"))
+        self.assertTrue(is_enrichment_summary_field("RNA cancer specificity score"))
+
+    def test_hpa_reference_is_not_a_tumor(self):
+        text = (
+            "Gene\tGene name\tImmune cell\tTPM\tpTPM\tnTPM\n"
+            "ENSG00000049249\tTNFRSF9\tmemory CD8 T-cell\t9.4\t11.5\t9.4\n"
+            "ENSG00000188389\tPDCD1\tmemory CD8 T-cell\t12.3\t15.1\t12.4\n"
+        )
+        with tempfile.TemporaryDirectory() as temporary:
+            cache = Path(temporary)
+            (cache / "rna_immune_cell.tsv").write_text(text, encoding="utf-8")
+            table = load_hpa_immune_cell_table("https://example.invalid/not-used", cache, ["TNFRSF9", "PDCD1"])
+        self.assertTrue((table["evidence_status"] == "Reference only").all())
+        self.assertTrue(table["cancer_type"].isna().all())
+        memory = table[table["Immune cell"] == "memory CD8 T-cell"]
+        tnfrsf9 = memory[memory["Gene name"] == "TNFRSF9"].iloc[0]
+        pdcd1 = memory[memory["Gene name"] == "PDCD1"].iloc[0]
+        self.assertEqual(float(tnfrsf9["nTPM"]), 9.4)
+        self.assertEqual(float(pdcd1["nTPM"]), 12.4)
+        self.assertNotIn("BRCA", table.fillna("").astype(str).values.ravel().tolist())
+
+
+class CoverageAndExportTests(unittest.TestCase):
+    def test_coverage_does_not_invent_immune_results(self):
+        samples = pd.DataFrame(
+            {
+                "study": ["TCGA", "TCGA"],
+                "cancer_code": ["BRCA", "LAML"],
+                "specimen_class": ["solid_primary", "hematologic"],
+            }
+        )
+        coverage = coverage_table(samples)
+        brca = coverage[coverage["cancer_code"] == "BRCA"].iloc[0]
+        laml = coverage[coverage["cancer_code"] == "LAML"].iloc[0]
+        self.assertEqual(brca["subtype_status"], "available")
+        self.assertEqual(laml["rna_reason"].startswith("hematologic"), True)
+        self.assertTrue((coverage["immune_status"] == "unavailable").all())
+        self.assertTrue((coverage["immune_reason"] == "unsupported").all())
+        immune = immune_composition_result("BRCA")
+        self.assertEqual(immune["status"], "Unavailable")
+        self.assertTrue(immune["table"].empty)
+
+    def test_export_matches_table_values(self):
+        frame = pd.DataFrame(
+            {
+                "cancer_code": ["BRCA"],
+                "median": [1.25],
+                "unit": ["log2(TPM+1)"],
+                "denominator": ["bulk tumor RNA, one patient"],
+            }
+        )
+        exported = pd.read_csv(io.StringIO(export_frame(frame)))
+        self.assertEqual(exported.iloc[0]["unit"], "log2(TPM+1)")
+        self.assertAlmostEqual(float(exported.iloc[0]["median"]), 1.25)
+
+    def test_figure_uses_points_for_single_values(self):
+        patients = pd.DataFrame(
+            {
+                "group_label": ["BRCA", "BRCA", "LUAD"],
+                "display_value": [1.0, 2.0, 3.0],
+            }
+        )
+        summary = pd.DataFrame(
+            {
+                "group_label": ["BRCA", "LUAD"],
+                "distribution": ["boxplot", "point"],
+                "median": [1.5, 3.0],
+            }
+        )
+        png = matplotlib_png(patients, summary, "fixture")
+        self.assertTrue(png.startswith(b"\x89PNG"))
+
+    def test_settings_do_not_require_invented_secrets(self):
+        settings = load_settings()
+        self.assertTrue(settings["TAA_XENA_TOIL_HUB"].startswith("https://"))
+        self.assertEqual(settings["_used_env_keys"], "")
+
+    def test_failure_is_distinct_from_a_number(self):
+        error = RetrievalFailed("hub", "connection closed")
+        self.assertEqual(error.missing_reason, "retrieval_failed")
+        self.assertNotIn("9.4", str(error))
+
+
+if __name__ == "__main__":
+    unittest.main()

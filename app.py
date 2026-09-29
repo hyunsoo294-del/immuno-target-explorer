@@ -17,9 +17,10 @@ import csv_io
 import data_sources
 import pptx_export
 import references
+import taa_views
 
 # Streamlit can keep old modules after file updates.
-for _mod_name in ("csv_io", "charts", "data_sources", "analysis", "expression_compare", "cptac", "data_qc", "references", "pptx_export", "pptx_assets", "taa_character", "cell_line_protein"):
+for _mod_name in ("csv_io", "charts", "data_sources", "analysis", "expression_compare", "cptac", "data_qc", "references", "pptx_export", "pptx_assets", "taa_character", "cell_line_protein", "taa_analysis.pipeline", "taa_analysis.charts", "taa_views"):
     if _mod_name in sys.modules:
         importlib.reload(sys.modules[_mod_name])
 
@@ -1204,6 +1205,13 @@ def run_lookup(user_text: str) -> None:
 
 
 init_state()
+
+with st.sidebar:
+    st.radio("화면 / Screen", ["TAA analysis", "Legacy explorer"], key="ui_mode")
+
+if st.session_state.get("ui_mode", "TAA analysis") == "TAA analysis":
+    taa_views.render_taa_analysis()
+    st.stop()
 
 with st.sidebar:
     st.markdown("### Immuno-oncology explorer")
