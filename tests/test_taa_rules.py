@@ -39,7 +39,7 @@ from taa_analysis.molecules import (
     tme_catalog_eligible,
 )
 from taa_analysis.pipeline import coverage_table, export_frame, immune_composition_result
-from taa_analysis.score import score_cell_line_groups
+from taa_analysis.immune_score import binding_hindrance, score_lines, select_lines
 from taa_analysis.settings import load_settings
 from taa_analysis.transforms import TransformError, convert_stored_expression
 from taa_analysis.xena import RetrievalFailed
@@ -411,59 +411,67 @@ class CellLineFactorTests(unittest.TestCase):
         self.assertEqual(breast["unit"], "log2(nTPM+1)")
 
 
-class CellLineScoreTests(unittest.TestCase):
+class ImmuneActivationTests(unittest.TestCase):
     def _lines(self) -> pd.DataFrame:
         return pd.DataFrame(
             [
                 {"cell_line": "MCF-7", "group_label": "Breast Carcinoma", "nTPM": 10},
                 {"cell_line": "BT-474", "group_label": "Breast Carcinoma", "nTPM": 30},
                 {"cell_line": "A549", "group_label": "Lung Adenocarcinoma", "nTPM": 1},
-                {"cell_line": "H460", "group_label": "Lung Adenocarcinoma", "nTPM": 1},
                 {"cell_line": "NORM", "group_label": "Non-Cancerous", "nTPM": 500},
                 {"cell_line": "X", "group_label": "Unknown", "nTPM": 800},
-                {"cell_line": "BAD", "group_label": "Breast Carcinoma", "nTPM": -3},
             ]
         )
 
-    def test_score_uses_cancer_lines_and_ranks_higher_expression(self):
-        scored = score_cell_line_groups(self._lines())
-        self.assertTrue(set(scored.loc[~scored["scored"], "cancer"]) >= {"Unknown", "Non-Cancerous"})
-        breast = scored[scored["cancer"] == "Breast Carcinoma"].iloc[0]
-        lung = scored[scored["cancer"] == "Lung Adenocarcinoma"].iloc[0]
-        self.assertEqual(int(breast["n_cell_lines"]), 3)
-        self.assertEqual(int(breast["n_measured"]), 2)
-        self.assertAlmostEqual(float(breast["median_nTPM"]), 20.0)
-        self.assertAlmostEqual(float(breast["detected_fraction"]), 1.0)
+    def _contact(self) -> pd.DataFrame:
+        return pd.DataFrame(
+            [
+                {"gene_symbol": "HLA-A", "cell_line": "MCF-7", "nTPM": 20},
+                {"gene_symbol": "HLA-A", "cell_line": "BT-474", "nTPM": 20},
+                {"gene_symbol": "HLA-A", "cell_line": "A549", "nTPM": 4},
+                {"gene_symbol": "B2M", "cell_line": "MCF-7", "nTPM": 40},
+                {"gene_symbol": "B2M", "cell_line": "BT-474", "nTPM": 40},
+                {"gene_symbol": "B2M", "cell_line": "A549", "nTPM": 4},
+            ]
+        )
+
+    def test_cancer_selection_drops_unknown_and_ranks_expression(self):
+        chosen = select_lines(self._lines(), cancers=["Breast Carcinoma", "Lung Adenocarcinoma"])
+        self.assertEqual(set(chosen["cell_line"]), {"MCF-7", "BT-474", "A549"})
+        result = score_lines(chosen, self._contact(), hindrance=0.2)
+        breast = result["per_cancer"][result["per_cancer"]["cancer"] == "Breast Carcinoma"].iloc[0]
+        lung = result["per_cancer"][result["per_cancer"]["cancer"] == "Lung Adenocarcinoma"].iloc[0]
+        self.assertAlmostEqual(float(breast["taa_median_nTPM"]), 20.0)
         self.assertGreater(float(breast["score"]), float(lung["score"]))
-        self.assertGreater(float(breast["selectivity_log2"]), 0)
-        self.assertLess(float(lung["selectivity_log2"]), 0)
-        self.assertTrue(0 <= float(breast["score"]) <= 100)
-        self.assertEqual(scored.iloc[0]["cancer"], "Breast Carcinoma")
-        held = scored[scored["cancer"] == "Non-Cancerous"].iloc[0]
-        self.assertTrue(pd.isna(held["score"]))
+        self.assertTrue(0 <= float(result["score"]) <= 100)
 
-    def test_single_cancer_score_omits_selectivity(self):
-        lines = pd.DataFrame(
-            [
-                {"cell_line": "A", "group_label": "Melanoma", "nTPM": 8},
-                {"cell_line": "B", "group_label": "Melanoma", "nTPM": 0},
-            ]
-        )
-        scored = score_cell_line_groups(lines).iloc[0]
-        self.assertTrue(pd.isna(scored["selectivity_log2"]))
-        self.assertAlmostEqual(float(scored["detected_fraction"]), 0.5)
-        self.assertIsNotNone(scored["score"])
-        self.assertTrue(float(scored["score"]) > 0)
+    def test_cell_line_multiselect_uses_only_those_lines(self):
+        one = select_lines(self._lines(), cell_lines=["A549"])
+        many = select_lines(self._lines(), cancers=["Breast Carcinoma"])
+        low = score_lines(one, self._contact(), hindrance=0.2)
+        high = score_lines(many, self._contact(), hindrance=0.2)
+        self.assertEqual(int(low["factors"]["n_cell_lines"]), 1)
+        self.assertAlmostEqual(float(low["factors"]["taa_median_nTPM"]), 1.0)
+        self.assertGreater(float(high["factors"]["taa_median_nTPM"]), float(low["factors"]["taa_median_nTPM"]))
 
-    def test_empty_measurements_have_no_score(self):
-        lines = pd.DataFrame(
-            [
-                {"cell_line": "A", "group_label": "Melanoma", "nTPM": None},
-            ]
-        )
-        scored = score_cell_line_groups(lines).iloc[0]
-        self.assertTrue(pd.isna(scored["score"]))
-        self.assertTrue(pd.isna(scored["median_nTPM"]))
+    def test_missing_hindrance_is_not_treated_as_zero(self):
+        chosen = select_lines(self._lines(), cell_lines=["MCF-7"])
+        missing = score_lines(chosen, self._contact(), hindrance=None)
+        zero = score_lines(chosen, self._contact(), hindrance=0.0)
+        self.assertNotAlmostEqual(float(missing["score"]), float(zero["score"]))
+
+    def test_glycans_outside_the_extracellular_domain_do_not_count(self):
+        features = [
+            {"type": "Topological domain", "description": "Extracellular", "start": 1, "end": 100},
+            {"type": "Glycosylation", "description": "N-linked (GlcNAc...) asparagine", "start": 20, "end": 20},
+            {"type": "Glycosylation", "description": "N-linked (GlcNAc...) asparagine", "start": 400, "end": 400},
+        ]
+        surface = binding_hindrance(features, "Cell surface")
+        hidden = binding_hindrance(features, "Cytosol")
+        self.assertEqual(surface["ecd_aa"], 100)
+        self.assertEqual(surface["n_glycan_extracellular"], 1)
+        self.assertIsNotNone(surface["hindrance_0_1"])
+        self.assertIsNone(hidden["hindrance_0_1"])
 
 
 if __name__ == "__main__":

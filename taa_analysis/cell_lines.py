@@ -234,13 +234,21 @@ def resolve_catalog_symbol(catalog: pd.DataFrame, gene_query: str, required: boo
     return requested
 
 
-def extract_hpa_gene_rows(zip_path: Path, symbol: str, catalog_path: Path | None = None) -> pd.DataFrame:
-    """Rows for one gene. Symbol and Ensembl id both select that gene only."""
-    symbol_key = symbol.upper()
-    ensembl_key = ensembl_base(symbol_key) if symbol_key.startswith("ENSG") else ""
+def extract_hpa_symbols(zip_path: Path, symbols: list[str] | set[str], catalog_path: Path | None = None) -> dict[str, pd.DataFrame]:
+    """One pass over the HPA matrix. Keys are the gene names found in the file."""
+    wanted_names = set()
+    wanted_ensembl = set()
+    for symbol in symbols:
+        key = str(symbol or "").upper()
+        if key.startswith("ENSG"):
+            base = ensembl_base(key)
+            if base:
+                wanted_ensembl.add(base)
+        elif key:
+            wanted_names.add(key)
     write_catalog = catalog_path is not None and not catalog_path.exists()
     catalog: dict[str, str] = {}
-    rows: list[dict] = []
+    buckets: dict[str, list[dict]] = {}
     with zipfile.ZipFile(zip_path) as archive:
         names = archive.namelist()
         if not names:
@@ -259,9 +267,9 @@ def extract_hpa_gene_rows(zip_path: Path, symbol: str, catalog_path: Path | None
                 gene_id = ensembl_base(parts[index["Gene"]]) or parts[index["Gene"]]
                 if write_catalog:
                     catalog.setdefault(gene_name, gene_id)
-                if gene_name.upper() != symbol_key and gene_id != ensembl_key:
+                if gene_name.upper() not in wanted_names and gene_id not in wanted_ensembl:
                     continue
-                rows.append(
+                buckets.setdefault(gene_name, []).append(
                     {
                         "gene_id": gene_id,
                         "gene_symbol": gene_name,
@@ -273,12 +281,17 @@ def extract_hpa_gene_rows(zip_path: Path, symbol: str, catalog_path: Path | None
         pd.DataFrame(
             [{"gene_symbol": name, "gene_id": gene_id} for name, gene_id in sorted(catalog.items())]
         ).to_csv(catalog_path, index=False)
-    frame = pd.DataFrame(rows)
+    return {name: pd.DataFrame(rows) for name, rows in buckets.items()}
+
+
+def extract_hpa_gene_rows(zip_path: Path, symbol: str, catalog_path: Path | None = None) -> pd.DataFrame:
+    """Rows for one gene. Symbol and Ensembl id both select that gene only."""
+    found = extract_hpa_symbols(zip_path, [symbol], catalog_path=catalog_path)
+    if len(found) != 1:
+        raise RetrievalFailed(HPA_CELLINE_URL, f"no HPA cell-line rows for {symbol}")
+    frame = next(iter(found.values()))
     if frame.empty:
         raise RetrievalFailed(HPA_CELLINE_URL, f"no HPA cell-line rows for {symbol}")
-    symbols = set(frame["gene_symbol"].astype(str))
-    if len(symbols) != 1:
-        raise RetrievalFailed(HPA_CELLINE_URL, f"cell-line extract mixed genes: {sorted(symbols)}")
     return frame
 
 
