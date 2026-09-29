@@ -20,7 +20,7 @@ import references
 import taa_views
 
 # Streamlit can keep old modules after file updates.
-for _mod_name in ("csv_io", "charts", "data_sources", "analysis", "expression_compare", "cptac", "data_qc", "references", "pptx_export", "pptx_assets", "taa_character", "cell_line_protein", "taa_analysis.pipeline", "taa_analysis.charts", "taa_views"):
+for _mod_name in ("csv_io", "charts", "data_sources", "analysis", "expression_compare", "cptac", "data_qc", "references", "pptx_export", "pptx_assets", "taa_character", "cell_line_protein", "taa_analysis.cell_lines", "taa_analysis.pipeline", "taa_analysis.charts", "taa_views"):
     if _mod_name in sys.modules:
         importlib.reload(sys.modules[_mod_name])
 

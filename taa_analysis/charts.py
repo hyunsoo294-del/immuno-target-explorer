@@ -34,7 +34,7 @@ def _groups(patients: pd.DataFrame, summary: pd.DataFrame) -> list[tuple[str, pd
     return groups
 
 
-def plotly_expression(patients: pd.DataFrame, summary: pd.DataFrame, title: str):
+def plotly_expression(patients: pd.DataFrame, summary: pd.DataFrame, title: str, x_title: str = "log2(TPM+1)"):
     import plotly.graph_objects as go
 
     figure = go.Figure()
@@ -68,7 +68,7 @@ def plotly_expression(patients: pd.DataFrame, summary: pd.DataFrame, title: str)
         title=title,
         paper_bgcolor="white",
         plot_bgcolor="white",
-        xaxis_title="log2(TPM+1)",
+        xaxis_title=x_title,
         yaxis_title="",
         height=max(420, 28 * max(1, len(summary))),
         margin={"l": 160, "r": 24, "t": 60, "b": 48},
@@ -79,7 +79,7 @@ def plotly_expression(patients: pd.DataFrame, summary: pd.DataFrame, title: str)
     return figure
 
 
-def plotly_subtype(patients: pd.DataFrame, summary: pd.DataFrame, title: str):
+def plotly_subtype(patients: pd.DataFrame, summary: pd.DataFrame, title: str, x_title: str = "log2(TPM+1)"):
     import plotly.graph_objects as go
 
     figure = go.Figure()
@@ -123,7 +123,7 @@ def plotly_subtype(patients: pd.DataFrame, summary: pd.DataFrame, title: str):
         title=title,
         paper_bgcolor="white",
         plot_bgcolor="white",
-        xaxis_title="log2(TPM+1)",
+        xaxis_title=x_title,
         height=max(420, 70 * max(1, len(order))),
         margin={"l": 160, "r": 24, "t": 60, "b": 48},
         font={"family": "Noto Sans, Noto Sans KR, sans-serif", "color": "#1f2933"},
@@ -132,7 +132,7 @@ def plotly_subtype(patients: pd.DataFrame, summary: pd.DataFrame, title: str):
     return figure
 
 
-def matplotlib_png(patients: pd.DataFrame, summary: pd.DataFrame, title: str) -> bytes:
+def matplotlib_png(patients: pd.DataFrame, summary: pd.DataFrame, title: str, x_title: str = "log2(TPM+1)") -> bytes:
     import matplotlib
 
     matplotlib.use("Agg")
@@ -165,7 +165,7 @@ def matplotlib_png(patients: pd.DataFrame, summary: pd.DataFrame, title: str) ->
             axis.boxplot(draw_series, labels=draw_labels, **box_kwargs)
     for label, value in singles:
         axis.scatter([value], [label], color="#b45309", zorder=3)
-    axis.set_xlabel("log2(TPM+1)")
+    axis.set_xlabel(x_title)
     axis.set_title(title, loc="left", fontsize=10)
     figure.tight_layout()
     buffer = io.BytesIO()

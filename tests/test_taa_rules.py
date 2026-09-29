@@ -4,13 +4,20 @@
 from __future__ import annotations
 
 import io
+import math
 import tempfile
 import unittest
+import zipfile
 from pathlib import Path
 
 import pandas as pd
 
 from taa_analysis.aliases import target_identity
+from taa_analysis.cell_lines import (
+    attach_cancer_types,
+    extract_hpa_gene_rows,
+    summarize_cell_line_groups,
+)
 from taa_analysis.charts import matplotlib_png
 from taa_analysis.cohort import select_one_sample_per_patient
 from taa_analysis.composition import (
@@ -273,6 +280,77 @@ class CoverageAndExportTests(unittest.TestCase):
         error = RetrievalFailed("hub", "connection closed")
         self.assertEqual(error.missing_reason, "retrieval_failed")
         self.assertNotIn("9.4", str(error))
+
+
+class CellLineFactorTests(unittest.TestCase):
+    def _matrix(self) -> pd.DataFrame:
+        text = (
+            "Gene\tGene name\tCell line\tTPM\tpTPM\tnTPM\n"
+            "ENSG00000141736\tERBB2\tMCF-7\t1\t1\t10\n"
+            "ENSG00000141736\tERBB2\tBT-474\t1\t1\t30\n"
+            "ENSG00000141736\tERBB2\tNO-MATCH\t1\t1\t0\n"
+            "ENSG00000141736\tERBB2\tCONFLICT\t1\t1\t4\n"
+            "ENSG00000141736\tERBB2\tBAD\t1\t1\t-1\n"
+            "ENSG00000000003\tTSPAN6\tMCF-7\t9\t9\t9\n"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "rna_celline.tsv.zip"
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr("rna_celline.tsv", text)
+            return extract_hpa_gene_rows(path, "ERBB2")
+
+    def test_full_matrix_factors_keep_ntpm_and_row_count(self):
+        expression = self._matrix()
+        self.assertEqual(len(expression), 5)
+        annotations = pd.DataFrame(
+            [
+                {
+                    "names": "MCF-7|MCF7",
+                    "cancer_type": "Breast Carcinoma",
+                    "model_id": "SIDM1",
+                    "sample_site": "Primary",
+                    "tissue_status": "Tumour",
+                },
+                {
+                    "names": "BT-474",
+                    "cancer_type": "Breast Carcinoma",
+                    "model_id": "SIDM2",
+                    "sample_site": "Primary",
+                    "tissue_status": "Tumour",
+                },
+                {
+                    "names": "CONFLICT",
+                    "cancer_type": "Breast Carcinoma",
+                    "model_id": "SIDM3",
+                    "sample_site": "Primary",
+                    "tissue_status": "Tumour",
+                },
+                {
+                    "names": "CONFLICT",
+                    "cancer_type": "Melanoma",
+                    "model_id": "SIDM4",
+                    "sample_site": "Metastasis",
+                    "tissue_status": "Metastasis",
+                },
+            ]
+        )
+        lines = attach_cancer_types(expression, annotations)
+        self.assertEqual(len(lines), 5)
+        summary = summarize_cell_line_groups(lines)
+        breast = summary[summary["cancer"] == "Breast Carcinoma"].iloc[0]
+        self.assertEqual(int(breast["n_cell_lines"]), 2)
+        expected = pd.Series([math.log2(11), math.log2(31)])
+        self.assertAlmostEqual(float(breast["median"]), float(expected.median()))
+        self.assertAlmostEqual(float(breast["median_nTPM"]), 20.0)
+        self.assertEqual(breast["unit"], "log2(nTPM+1)")
+        self.assertEqual(breast["source_unit"], "nTPM")
+        self.assertNotIn("TPM+1)", breast["unit"].replace("nTPM", "X"))
+        unknown = summary[summary["cancer"] == "Unknown"].iloc[0]
+        self.assertEqual(int(unknown["n_cell_lines"]), 3)
+        self.assertEqual(int(unknown["missing_n"]), 1)
+        conflict = lines[lines["cell_line"] == "CONFLICT"].iloc[0]
+        self.assertEqual(conflict["annotation_status"], "conflict")
+        self.assertEqual(conflict["group_label"], "Unknown")
 
 
 if __name__ == "__main__":

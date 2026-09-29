@@ -51,6 +51,10 @@ def _caption(meta: dict, mode: str, extra: str = "") -> str:
     )
 
 
+def _axis_title(meta: dict) -> str:
+    return str(meta.get("unit_display") or "log2(TPM+1)")
+
+
 def _downloads(name: str, frame: pd.DataFrame, patients: pd.DataFrame, meta: dict, mode: str) -> None:
     if frame is None or frame.empty:
         return
@@ -72,7 +76,7 @@ def _downloads(name: str, frame: pd.DataFrame, patients: pd.DataFrame, meta: dic
         title = _caption(meta, mode)
         st.download_button(
             "그림 PNG / Figure PNG",
-            matplotlib_png(patients, frame, title),
+            matplotlib_png(patients, frame, title, x_title=_axis_title(meta)),
             file_name=f"{name}.png",
             mime="image/png",
             key=f"png_{name}",
@@ -156,7 +160,12 @@ def render_taa_analysis() -> None:
         default_index = codes.index("BRCA")
     else:
         default_index = 0
-    cancer = st.selectbox("암종 / Cancer (아형은 선택한 암종 안에서만)", codes, index=default_index, key="taa_cancer_select")
+    cancer_label = (
+        "세포주 암종 / Cell-line cancer"
+        if mode == "cell_line"
+        else "암종 / Cancer (아형은 선택한 암종 안에서만)"
+    )
+    cancer = st.selectbox(cancer_label, codes, index=default_index, key="taa_cancer_select")
     systems = available_subtype_systems(cancer) if cancer else []
     subtype_system = ""
     if systems:
@@ -204,13 +213,45 @@ def render_taa_analysis() -> None:
         ]
     )
     with tab1:
-        st.markdown("**Bulk RNA from tumor tissue.** 악성세포 표면 HER2 밀도, IHC 3+, 임상 HER2 양성률이 아닙니다.")
+        if mode == "cell_line":
+            st.markdown(
+                "**HPA cell-line RNA (nTPM).** 환자 종양 bulk RNA가 아니고, "
+                "HPA enrichment 요약 필드도 아닙니다. 화면 값은 log2(nTPM+1)입니다."
+            )
+            note = meta.get("cohort_note") or ""
+            if note:
+                st.caption(note)
+        else:
+            st.markdown("**Bulk RNA from tumor tissue.** 악성세포 표면 HER2 밀도, IHC 3+, 임상 HER2 양성률이 아닙니다.")
         _show_figure(
-            plotly_expression(bundle["patients"], bundle["summary"], _caption(meta, mode, "patient-level")),
+            plotly_expression(
+                bundle["patients"],
+                bundle["summary"],
+                _caption(meta, mode, "one cell line" if mode == "cell_line" else "patient-level"),
+                x_title=_axis_title(meta),
+            ),
             bundle["patients"],
             bundle["summary"],
         )
         st.dataframe(bundle["summary"], width="stretch", hide_index=True)
+        if mode == "cell_line" and not bundle["patients"].empty:
+            line_columns = [
+                column
+                for column in (
+                    "cell_line",
+                    "group_label",
+                    "nTPM",
+                    "display_value",
+                    "annotation_status",
+                    "model_id",
+                    "sample_site",
+                    "tissue_status",
+                    "transform_error",
+                )
+                if column in bundle["patients"].columns
+            ]
+            with st.expander("세포주 목록 / Cell lines"):
+                st.dataframe(bundle["patients"][line_columns], width="stretch", hide_index=True)
         _downloads("cancer", bundle["summary"], bundle["patients"], meta, mode)
         with st.expander("커버리지 / Coverage"):
             st.dataframe(bundle["coverage"], width="stretch", hide_index=True)
@@ -228,7 +269,12 @@ def render_taa_analysis() -> None:
                 st.warning(f"{cancer}: subtype_missing. 이 코호트에 연결된 annotation이 없어 아형 그림을 만들지 않습니다.")
             else:
                 _show_figure(
-                    plotly_subtype(bundle["subtype_patients"], bundle["subtype_summary"], _caption(meta, mode, subtype_system or "")),
+                    plotly_subtype(
+                        bundle["subtype_patients"],
+                        bundle["subtype_summary"],
+                        _caption(meta, mode, subtype_system or ""),
+                        x_title=_axis_title(meta),
+                    ),
                     bundle["subtype_patients"],
                     bundle["subtype_summary"],
                 )

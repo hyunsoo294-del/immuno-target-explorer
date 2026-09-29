@@ -463,6 +463,46 @@ def coverage_table(samples: pd.DataFrame) -> pd.DataFrame:
 
 def expression_bundle(gene_query: str, mode: str = "solid_primary", cancer_code: str | None = None, subtype_system: str | None = None, force: bool = False) -> dict:
     """One filtered object shared by the summary table, the figure, and CSV export."""
+    if mode == "cell_line":
+        from taa_analysis.cell_lines import load_cell_line_result
+
+        loaded_lines = load_cell_line_result(gene_query, force=force)
+        subtype_summary = pd.DataFrame()
+        if cancer_code:
+            subtype_summary = pd.DataFrame(
+                [
+                    {
+                        "subtype_system": "",
+                        "subtype": "",
+                        "n": 0,
+                        "median": None,
+                        "q1": None,
+                        "q3": None,
+                        "iqr": None,
+                        "source": "",
+                        "unclassified_n": None,
+                        "unit": loaded_lines["meta"].get("unit_display"),
+                        "distribution": "unavailable",
+                        "annotation_status": "",
+                        "evidence_status": "Unavailable",
+                        "missing_reason": "subtype_missing",
+                    }
+                ]
+            )
+        return {
+            "identity": loaded_lines["identity"],
+            "meta": loaded_lines["meta"],
+            "mode": mode,
+            "cancer_code": cancer_code,
+            "subtype_system": subtype_system,
+            "patients": loaded_lines["lines"],
+            "summary": loaded_lines["summary"],
+            "subtype_patients": pd.DataFrame(),
+            "subtype_summary": subtype_summary,
+            "immune": immune_composition_result(cancer_code or "cell lines"),
+            "molecules": tumor_molecule_result(cancer_code or "", subtype_system or "", ""),
+            "coverage": loaded_lines["coverage"],
+        }
     loaded = load_gene_slice(gene_query, force=force)
     patients = patient_expression(loaded["samples"], mode)
     summary = summarize_expression(patients, mode, loaded["meta"])
