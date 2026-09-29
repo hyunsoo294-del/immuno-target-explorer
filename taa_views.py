@@ -44,10 +44,16 @@ html, body, [class*="css"] { font-family: "Noto Sans KR", "Noto Sans", sans-seri
 
 
 def _caption(meta: dict, mode: str, extra: str = "") -> str:
+    if mode == "cell_line":
+        scope = "HPA cell-line nTPM, one cell line. nTPM is not relabeled as TPM."
+    elif mode == "normal_reference":
+        scope = "normal-tissue reference RNA, separate from the tumor cohort."
+    else:
+        scope = "bulk RNA, not surface protein and not an IHC score."
     return (
-        f"{meta.get('source_name')} | {meta.get('dataset_id')} {meta.get('dataset_version')} | "
+        f"{meta.get('gene_symbol') or ''} | {meta.get('source_name')} | {meta.get('dataset_id')} {meta.get('dataset_version')} | "
         f"{meta.get('unit_display')} | {meta.get('formula')} | mode={MODE_LABELS.get(mode, mode)} | "
-        f"retrieved {meta.get('retrieved_at')} | bulk RNA, not surface HER2 and not an IHC score. {extra}"
+        f"retrieved {meta.get('retrieved_at')} | {scope} {extra}"
     )
 
 
@@ -66,10 +72,11 @@ def _downloads(name: str, frame: pd.DataFrame, patients: pd.DataFrame, meta: dic
         key=f"csv_{name}",
     )
     if patients is not None and not patients.empty and "display_value" in patients.columns:
+        value_label = "세포주 값 CSV / Cell-line values CSV" if mode == "cell_line" else "환자 값 CSV / Patient values CSV"
         st.download_button(
-            "환자 값 CSV / Patient values CSV",
+            value_label,
             export_frame(patients),
-            file_name=f"{name}_patients.csv",
+            file_name=f"{name}_values.csv",
             mime="text/csv",
             key=f"csv_patients_{name}",
         )
@@ -105,9 +112,15 @@ def render_taa_analysis() -> None:
     st.markdown("## TAA 분석 / TAA analysis")
     st.caption(
         "유전자 → 암종 → 아형 → 면역세포 → 분자표. "
-        "환자 종양 bulk RNA와 정상 혈액 참고는 같은 축에 섞지 않습니다."
+        "검색한 TAA마다 같은 요약 요인(n, 중앙값, Q1, Q3, 단위, 소스, 결측)을 계산합니다. "
+        "환자 종양 bulk RNA, 세포주 nTPM, 정상 혈액 참고는 같은 축에 섞지 않습니다."
     )
-    gene = st.text_input("유전자 / Gene", value=st.session_state.get("taa_gene", "ERBB2"), key="taa_gene_input")
+    gene = st.text_input(
+        "유전자 / Gene",
+        value=st.session_state.get("taa_gene", ""),
+        placeholder="PD-L1, 4-1BB, EGFR, MSLN, HER2",
+        key="taa_gene_input",
+    )
     mode = st.selectbox(
         "공통 필터 / Shared specimen filter",
         list(MODES),
@@ -125,7 +138,14 @@ def render_taa_analysis() -> None:
         return
     if load or retry:
         try:
-            with st.spinner("Xena에서 이 유전자의 bulk RNA slice와 cohort metadata를 가져오는 중"):
+            if not gene.strip():
+                raise ValueError("empty gene query")
+            spinner = (
+                "HPA 세포주 RNA에서 이 유전자의 nTPM과 암종 라벨을 가져오는 중"
+                if mode == "cell_line"
+                else "Xena에서 이 유전자의 bulk RNA slice와 cohort metadata를 가져오는 중"
+            )
+            with st.spinner(spinner):
                 st.session_state.taa_bundle = expression_bundle(gene.strip(), mode, force=bool(retry))
                 st.session_state.taa_key = state_key
                 st.session_state.taa_error = ""
@@ -149,7 +169,11 @@ def render_taa_analysis() -> None:
 
     bundle = st.session_state.get("taa_bundle")
     if not bundle:
-        st.info("유전자를 입력하고 조회를 누르세요. HER2와 ERBB2는 같은 target으로 처리됩니다.")
+        st.info(
+            "유전자 심볼이나 별칭을 입력하고 조회를 누르세요. "
+            "PD-L1, 4-1BB, EGFR, MSLN, HER2를 포함한 어떤 TAA도 같은 표와 요약 요인으로 계산됩니다. "
+            "별칭은 승인 심볼로 바뀐 뒤 그 유전자의 행만 사용합니다."
+        )
         return
 
     identity = bundle["identity"]
@@ -222,7 +246,13 @@ def render_taa_analysis() -> None:
             if note:
                 st.caption(note)
         else:
-            st.markdown("**Bulk RNA from tumor tissue.** 악성세포 표면 HER2 밀도, IHC 3+, 임상 HER2 양성률이 아닙니다.")
+            symbol = identity.get("gene_symbol") or "이 유전자"
+            if symbol == "ERBB2":
+                st.markdown("**Bulk RNA from tumor tissue.** 악성세포 표면 HER2 밀도, IHC 3+, 임상 HER2 양성률이 아닙니다.")
+            else:
+                st.markdown(
+                    f"**Bulk RNA from tumor tissue.** {symbol} 표면 단백질 밀도나 IHC 점수가 아닙니다."
+                )
         _show_figure(
             plotly_expression(
                 bundle["patients"],
@@ -283,7 +313,8 @@ def render_taa_analysis() -> None:
                 )
             st.dataframe(bundle["subtype_summary"], width="stretch", hide_index=True)
             _downloads("subtype", bundle["subtype_summary"], bundle["subtype_patients"], meta, mode)
-            st.caption("PAM50 HER2-enriched와 임상 HER2-positive는 다른 분류입니다. Basal-like와 TNBC도 같습니다로 두지 않습니다.")
+            if subtype_system and ("PAM50" in subtype_system or "Clinical HER2" in subtype_system):
+                st.caption("PAM50 HER2-enriched와 임상 HER2-positive는 다른 분류입니다. Basal-like와 TNBC도 같습니다로 두지 않습니다.")
 
     immune = bundle["immune"]
     with tab3:

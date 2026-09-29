@@ -13,9 +13,11 @@ from pathlib import Path
 import pandas as pd
 
 from taa_analysis.aliases import target_identity
+from taa_analysis.aliases import canonical_symbol
 from taa_analysis.cell_lines import (
     attach_cancer_types,
     extract_hpa_gene_rows,
+    resolve_catalog_symbol,
     summarize_cell_line_groups,
 )
 from taa_analysis.charts import matplotlib_png
@@ -49,6 +51,10 @@ class AliasTests(unittest.TestCase):
         self.assertEqual(her2["gene_symbol"], erbb2["gene_symbol"])
         self.assertEqual(her2["gene_id"], erbb2["gene_id"])
         self.assertEqual(her2["gene_symbol"], "ERBB2")
+        self.assertEqual(canonical_symbol("PD-L1"), "CD274")
+        self.assertEqual(canonical_symbol("4-1BB"), "TNFRSF9")
+        self.assertEqual(canonical_symbol("BCMA"), "TNFRSF17")
+        self.assertEqual(target_identity("EGFR")["gene_symbol"], "EGFR")
 
 
 class TransformTests(unittest.TestCase):
@@ -351,6 +357,57 @@ class CellLineFactorTests(unittest.TestCase):
         conflict = lines[lines["cell_line"] == "CONFLICT"].iloc[0]
         self.assertEqual(conflict["annotation_status"], "conflict")
         self.assertEqual(conflict["group_label"], "Unknown")
+
+    def test_other_taa_rows_do_not_reuse_erbb2(self):
+        text = (
+            "Gene\tGene name\tCell line\tTPM\tpTPM\tnTPM\n"
+            "ENSG00000141736\tERBB2\tMCF-7\t1\t1\t100\n"
+            "ENSG00000120217\tCD274\tMCF-7\t1\t1\t8\n"
+            "ENSG00000120217\tCD274\tA549\t1\t1\t2\n"
+            "ENSG00000000003\tTSPAN6\tMCF-7\t1\t1\t9\n"
+        )
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "rna_celline.tsv.zip"
+            catalog_path = Path(directory) / "hpa_celline_genes.csv"
+            with zipfile.ZipFile(path, "w") as archive:
+                archive.writestr("rna_celline.tsv", text)
+            cd274 = extract_hpa_gene_rows(path, "CD274", catalog_path=catalog_path)
+            by_id = extract_hpa_gene_rows(path, "ENSG00000120217")
+            catalog = pd.read_csv(catalog_path, dtype=str)
+        self.assertEqual(set(cd274["gene_symbol"]), {"CD274"})
+        self.assertEqual(set(cd274["gene_id"]), {"ENSG00000120217"})
+        self.assertEqual(set(cd274["cell_line"]), {"MCF-7", "A549"})
+        self.assertEqual(list(by_id["gene_symbol"]), ["CD274", "CD274"])
+        self.assertEqual(resolve_catalog_symbol(catalog, "PD-L1"), "CD274")
+        self.assertEqual(resolve_catalog_symbol(catalog, "HER2"), "ERBB2")
+        self.assertEqual(resolve_catalog_symbol(catalog, "ENSG00000120217"), "CD274")
+        summary = summarize_cell_line_groups(
+            attach_cancer_types(
+                cd274,
+                pd.DataFrame(
+                    [
+                        {
+                            "names": "MCF-7",
+                            "cancer_type": "Breast Carcinoma",
+                            "model_id": "SIDM1",
+                            "sample_site": "Primary",
+                            "tissue_status": "Tumour",
+                        },
+                        {
+                            "names": "A549",
+                            "cancer_type": "Lung Adenocarcinoma",
+                            "model_id": "SIDM9",
+                            "sample_site": "Primary",
+                            "tissue_status": "Tumour",
+                        },
+                    ]
+                ),
+            )
+        )
+        breast = summary[summary["cancer"] == "Breast Carcinoma"].iloc[0]
+        self.assertEqual(int(breast["n_cell_lines"]), 1)
+        self.assertAlmostEqual(float(breast["median_nTPM"]), 8.0)
+        self.assertEqual(breast["unit"], "log2(nTPM+1)")
 
 
 if __name__ == "__main__":

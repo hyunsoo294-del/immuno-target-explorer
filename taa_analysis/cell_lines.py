@@ -32,6 +32,7 @@ CMP_PAGE = "https://cellmodelpassports.sanger.ac.uk/"
 
 SOURCE_COLUMNS = ("Gene", "Gene name", "Cell line", "TPM", "pTPM", "nTPM")
 UNKNOWN_CANCER = "Unknown"
+_ENSEMBL = re.compile(r"ENSG\d{11}", re.I)
 
 
 def _now() -> str:
@@ -206,8 +207,39 @@ def ensure_hpa_celline_zip(cache_dir: Path | None = None, force: bool = False) -
     return dest
 
 
-def extract_hpa_gene_rows(zip_path: Path, symbol: str) -> pd.DataFrame:
+def ensembl_base(gene_id: str) -> str:
+    match = _ENSEMBL.search(str(gene_id or ""))
+    return match.group(0).upper() if match else ""
+
+
+def resolve_catalog_symbol(catalog: pd.DataFrame, gene_query: str, required: bool = True) -> str:
+    """Map a symbol, alias, or Ensembl id onto one HPA gene name."""
+    requested = canonical_symbol(gene_query)
+    symbols = {
+        str(symbol).upper(): str(symbol)
+        for symbol in catalog.get("gene_symbol", pd.Series(dtype=str)).tolist()
+    }
+    if requested.upper() in symbols:
+        return symbols[requested.upper()]
+    ensembl = ensembl_base(gene_query) or (ensembl_base(requested) if requested.upper().startswith("ENSG") else "")
+    if ensembl and "gene_id" in catalog.columns:
+        hits = catalog[catalog["gene_id"].astype(str).str.upper() == ensembl]
+        found = sorted({str(symbol) for symbol in hits["gene_symbol"].tolist() if str(symbol)})
+        if len(found) == 1:
+            return found[0]
+        if len(found) > 1:
+            raise RetrievalFailed(HPA_CELLINE_URL, f"multiple HPA symbols for {ensembl}: {found}")
+    if required:
+        raise RetrievalFailed(HPA_CELLINE_URL, f"no HPA cell-line rows for {requested}")
+    return requested
+
+
+def extract_hpa_gene_rows(zip_path: Path, symbol: str, catalog_path: Path | None = None) -> pd.DataFrame:
+    """Rows for one gene. Symbol and Ensembl id both select that gene only."""
     symbol_key = symbol.upper()
+    ensembl_key = ensembl_base(symbol_key) if symbol_key.startswith("ENSG") else ""
+    write_catalog = catalog_path is not None and not catalog_path.exists()
+    catalog: dict[str, str] = {}
     rows: list[dict] = []
     with zipfile.ZipFile(zip_path) as archive:
         names = archive.namelist()
@@ -223,19 +255,30 @@ def extract_hpa_gene_rows(zip_path: Path, symbol: str) -> pd.DataFrame:
                 parts = raw.decode("utf-8").rstrip("\n").split("\t")
                 if len(parts) <= index["nTPM"]:
                     continue
-                if parts[index["Gene name"]].upper() != symbol_key:
+                gene_name = parts[index["Gene name"]]
+                gene_id = ensembl_base(parts[index["Gene"]]) or parts[index["Gene"]]
+                if write_catalog:
+                    catalog.setdefault(gene_name, gene_id)
+                if gene_name.upper() != symbol_key and gene_id != ensembl_key:
                     continue
                 rows.append(
                     {
-                        "gene_id": parts[index["Gene"]],
-                        "gene_symbol": parts[index["Gene name"]],
+                        "gene_id": gene_id,
+                        "gene_symbol": gene_name,
                         "cell_line": parts[index["Cell line"]],
                         "nTPM": parts[index["nTPM"]],
                     }
                 )
+    if write_catalog and catalog:
+        pd.DataFrame(
+            [{"gene_symbol": name, "gene_id": gene_id} for name, gene_id in sorted(catalog.items())]
+        ).to_csv(catalog_path, index=False)
     frame = pd.DataFrame(rows)
     if frame.empty:
         raise RetrievalFailed(HPA_CELLINE_URL, f"no HPA cell-line rows for {symbol}")
+    symbols = set(frame["gene_symbol"].astype(str))
+    if len(symbols) != 1:
+        raise RetrievalFailed(HPA_CELLINE_URL, f"cell-line extract mixed genes: {sorted(symbols)}")
     return frame
 
 
@@ -331,25 +374,36 @@ def summarize_cell_line_groups(lines: pd.DataFrame) -> pd.DataFrame:
 
 
 def load_cell_line_result(gene_query: str, force: bool = False) -> dict:
-    symbol = canonical_symbol(gene_query)
+    """Cell-line nTPM and summary factors for the queried TAA, not a fixed gene."""
     identity = target_identity(gene_query)
-    identity["gene_symbol"] = symbol
     cache_dir = _cache_dir()
-    slice_path = cache_dir / f"hpa_celline_{symbol}.csv"
-    meta_path = cache_dir / f"hpa_celline_{symbol}.json"
-    if slice_path.exists() and meta_path.exists() and not force:
-        lines = pd.read_csv(slice_path)
-        meta = json.loads(meta_path.read_text(encoding="utf-8"))
-    else:
+    catalog_path = cache_dir / "hpa_celline_genes.csv"
+    symbol = ""
+    lines = pd.DataFrame()
+    meta: dict = {}
+    if catalog_path.exists() and not force:
+        catalog = pd.read_csv(catalog_path, dtype=str).fillna("")
+        symbol = resolve_catalog_symbol(catalog, gene_query, required=True)
+        slice_path = cache_dir / f"hpa_celline_{symbol}.csv"
+        meta_path = cache_dir / f"hpa_celline_{symbol}.json"
+        if slice_path.exists() and meta_path.exists():
+            cached = pd.read_csv(slice_path)
+            cached_symbols = set(cached["gene_symbol"].astype(str)) if "gene_symbol" in cached.columns else set()
+            if cached_symbols == {symbol}:
+                lines = cached
+                meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    if lines.empty:
+        requested = symbol or canonical_symbol(gene_query)
         zip_path = ensure_hpa_celline_zip(cache_dir, force=False)
-        expression = extract_hpa_gene_rows(zip_path, symbol)
+        expression = extract_hpa_gene_rows(zip_path, requested, catalog_path=catalog_path)
+        symbol = str(expression["gene_symbol"].iloc[0])
         annotations = load_cmp_annotations(cache_dir, force=False)
         lines = attach_cancer_types(expression, annotations)
         digest = hashlib.sha256(lines["nTPM"].astype(str).str.cat(sep=",").encode()).hexdigest()[:16]
         matched = int((lines["annotation_status"] == "original").sum())
         meta = {
             "gene_symbol": symbol,
-            "gene_id": str(lines["gene_id"].iloc[0]) if not lines.empty else identity.get("gene_id", ""),
+            "gene_id": str(lines["gene_id"].iloc[0]) if not lines.empty else "",
             "probe_id": "",
             "source_name": "Human Protein Atlas cell-line RNA",
             "source_url": HPA_CELLINE_URL,
@@ -372,9 +426,12 @@ def load_cell_line_result(gene_query: str, force: bool = False) -> dict:
                 "The HPA enrichment field RNA cell line specific nTPM is not used."
             ),
         }
-        identity["gene_id"] = meta["gene_id"] or identity.get("gene_id", "")
+        slice_path = cache_dir / f"hpa_celline_{symbol}.csv"
+        meta_path = cache_dir / f"hpa_celline_{symbol}.json"
         lines.to_csv(slice_path, index=False)
         meta_path.write_text(json.dumps(meta), encoding="utf-8")
+    identity["gene_symbol"] = str(meta.get("gene_symbol") or symbol)
+    identity["gene_id"] = str(meta.get("gene_id") or "")
     if "group_label" not in lines.columns and "cancer_type" in lines.columns:
         lines["group_label"] = lines["cancer_type"].replace("", UNKNOWN_CANCER)
     summary = summarize_cell_line_groups(lines)

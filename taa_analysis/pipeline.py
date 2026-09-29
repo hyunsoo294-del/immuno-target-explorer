@@ -145,9 +145,10 @@ def load_gene_slice(gene_query: str, force: bool = False) -> dict:
         values["transform_error"] = [item["error"] for item in converted]
         values.to_csv(dest, index=False)
         digest = hashlib.sha256(values["source_value"].astype(str).str.cat(sep=",").encode()).hexdigest()[:16]
+        probe_gene = str(probe).split(".")[0] if str(probe).upper().startswith("ENSG") else ""
         meta = {
             "gene_symbol": symbol,
-            "gene_id": identity.get("gene_id", ""),
+            "gene_id": identity.get("gene_id") or probe_gene,
             "probe_id": probe,
             "source_name": "UCSC Xena Toil",
             "source_url": hub,
@@ -162,6 +163,11 @@ def load_gene_slice(gene_query: str, force: bool = False) -> dict:
             "n_rows": int(len(values)),
         }
         meta_path.write_text(json.dumps(meta), encoding="utf-8")
+    identity["gene_symbol"] = str(meta.get("gene_symbol") or identity.get("gene_symbol") or symbol)
+    if meta.get("gene_id"):
+        identity["gene_id"] = str(meta["gene_id"])
+    elif str(meta.get("probe_id") or "").upper().startswith("ENSG"):
+        identity["gene_id"] = str(meta["probe_id"]).split(".")[0]
     phenotype = load_phenotype(force=force)
     merged = values.merge(phenotype, on="sample_id", how="left", validate="one_to_one")
     if len(merged) != len(values):
