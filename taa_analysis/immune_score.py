@@ -38,10 +38,11 @@ def formula_text() -> str:
     return (
         f"면역 활성 점수 = 100 × ({WEIGHT_EXPRESSION:.2f} × TAA 발현 + {WEIGHT_CONTACT:.2f} × 세포 간 접촉 + "
         f"{WEIGHT_ACCESS:.2f} × (1 − 결합 방해)). "
-        f"발현과 접촉은 log2(중앙값 nTPM + 1) / log2({LEVEL_SATURATION_NTPM:.0f} + 1) 이고 1을 넘기면 1. "
-        "접촉은 같은 세포주에서 HLA-A, HLA-B, B2M, ICAM1, CD58 중앙값의 중앙값이다. "
-        "결합 방해는 세포외 도메인 길이와 그 안의 N-glycan 수를 0–1로 둔 평균이다. "
-        "없는 항목은 0으로 넣지 않고 남은 항목만 다시 맞춘다."
+        "점수는 세포주마다 따로 계산합니다. "
+        f"발현은 그 세포주의 nTPM이고, 접촉은 그 세포주의 HLA-A, HLA-B, B2M, ICAM1, CD58 nTPM 중앙값입니다. "
+        f"둘 다 log2(nTPM + 1) / log2({LEVEL_SATURATION_NTPM:.0f} + 1) 이고 1을 넘기면 1입니다. "
+        "결합 방해는 단백질 속성이라 같은 TAA의 모든 세포주에 같은 값을 붙입니다. "
+        "없는 항목은 0으로 넣지 않고 남은 항목만 다시 맞춥니다."
     )
 
 
@@ -127,59 +128,46 @@ def _cancer_lines(lines: pd.DataFrame) -> pd.DataFrame:
     return work[~work["group_label"].isin(UNSCORED_LABELS)].copy()
 
 
+def _contact_by_line(contact: pd.DataFrame, selected: set[str]) -> dict[str, float]:
+    if contact is None or contact.empty:
+        return {}
+    subset = contact[contact["cell_line"].astype(str).isin(selected)]
+    values: dict[str, float] = {}
+    for name, group in subset.groupby(subset["cell_line"].astype(str)):
+        median = _median(group["nTPM"])
+        if median is not None:
+            values[str(name)] = median
+    return values
+
+
 def score_lines(lines: pd.DataFrame, contact: pd.DataFrame, hindrance: float | None) -> dict:
-    """Score the supplied cancer-cell-line rows. Caller already applied the user's selection."""
+    """One immune-activation score per cancer cell line. No cancer-level average."""
     if lines is None or lines.empty:
-        return {"score": None, "per_cancer": pd.DataFrame(), "contact_genes": pd.DataFrame(), "factors": {}}
+        return {"per_line": pd.DataFrame(), "n_cell_lines": 0, "hindrance_0_1": hindrance}
     selected = set(lines["cell_line"].astype(str))
-    expression = _median(lines["nTPM"])
-    contact_rows = []
-    if contact is not None and not contact.empty:
-        subset = contact[contact["cell_line"].astype(str).isin(selected)]
-        for gene, group in subset.groupby("gene_symbol"):
-            contact_rows.append({"gene_symbol": gene, "median_nTPM": _median(group["nTPM"]), "n_cell_lines": int(group["cell_line"].nunique())})
-    contact_table = pd.DataFrame(contact_rows)
-    contact_median = _median(contact_table["median_nTPM"]) if not contact_table.empty else None
-    expression_unit = level_unit(expression)
-    contact_unit = level_unit(contact_median)
-    per_cancer = []
-    for label, group in lines.groupby("group_label", dropna=False):
-        cancer_expression = _median(group["nTPM"])
-        names = set(group["cell_line"].astype(str))
-        cancer_contact = None
-        if not contact_table.empty and contact is not None:
-            gene_medians = []
-            scoped = contact[contact["cell_line"].astype(str).isin(names)]
-            for _gene, gene_group in scoped.groupby("gene_symbol"):
-                value = _median(gene_group["nTPM"])
-                if value is not None:
-                    gene_medians.append(value)
-            cancer_contact = _median(gene_medians)
-        per_cancer.append(
+    contact_values = _contact_by_line(contact, selected)
+    rows = []
+    for record in lines.itertuples(index=False):
+        name = str(record.cell_line)
+        expression = _median([record.nTPM])
+        contact_ntpm = contact_values.get(name)
+        rows.append(
             {
-                "cancer": str(label),
-                "n_cell_lines": int(group["cell_line"].nunique()),
-                "taa_median_nTPM": cancer_expression,
-                "contact_median_nTPM": cancer_contact,
+                "cell_line": name,
+                "cancer": str(record.group_label),
+                "taa_nTPM": expression,
+                "contact_nTPM": contact_ntpm,
                 "hindrance_0_1": hindrance,
-                "score": _combine(level_unit(cancer_expression), level_unit(cancer_contact), hindrance),
+                "score": _combine(level_unit(expression), level_unit(contact_ntpm), hindrance),
             }
         )
-    per_frame = pd.DataFrame(per_cancer)
-    if not per_frame.empty:
-        per_frame = per_frame.sort_values("score", ascending=False, na_position="last").reset_index(drop=True)
+    per_line = pd.DataFrame(rows)
+    if not per_line.empty:
+        per_line = per_line.sort_values(["score", "taa_nTPM"], ascending=[False, False], na_position="last").reset_index(drop=True)
     return {
-        "score": _combine(expression_unit, contact_unit, hindrance),
-        "factors": {
-            "taa_median_nTPM": expression,
-            "taa_expression_0_1": expression_unit,
-            "contact_median_nTPM": contact_median,
-            "contact_0_1": contact_unit,
-            "hindrance_0_1": hindrance,
-            "n_cell_lines": int(lines["cell_line"].nunique()),
-        },
-        "per_cancer": per_frame,
-        "contact_genes": contact_table,
+        "per_line": per_line,
+        "n_cell_lines": int(per_line["cell_line"].nunique()) if not per_line.empty else 0,
+        "hindrance_0_1": hindrance,
     }
 
 

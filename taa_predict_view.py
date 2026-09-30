@@ -22,65 +22,79 @@ html, body, [class*="css"] { font-family: "Noto Sans KR", "Noto Sans", sans-seri
 """
 
 
+def _chart(per_line: pd.DataFrame):
+    import plotly.graph_objects as go
+
+    shown = per_line.dropna(subset=["score"]).head(20)
+    if shown.empty:
+        return None
+    labels = [f"{row.cell_line} · {row.cancer}" for row in shown.itertuples(index=False)]
+    figure = go.Figure(
+        go.Bar(
+            x=shown["score"],
+            y=labels,
+            orientation="h",
+            marker_color="#1aa6a6",
+            hovertemplate="%{y}<br>score %{x:.1f}<extra></extra>",
+        )
+    )
+    figure.update_layout(
+        xaxis_title="세포주별 점수 0–100",
+        yaxis={"categoryorder": "array", "categoryarray": list(reversed(labels))},
+        margin={"l": 10, "r": 10, "t": 10, "b": 10},
+        height=max(360, 26 * len(labels) + 80),
+        plot_bgcolor="#ffffff",
+        paper_bgcolor="#ffffff",
+    )
+    return figure
+
+
 def _show_result(bundle: dict, result: dict, selection_label: str) -> None:
     identity = bundle["identity"]
     hindrance = bundle["hindrance"]
-    factors = result["factors"]
-    score = result["score"]
-    score_text = f"{float(score):.1f}" if score is not None and pd.notna(score) else "계산 불가"
+    per_line = result["per_line"]
     st.markdown(
-        f'<div class="pred-score"><div class="num">{score_text}</div>'
-        f'<div>{identity.get("gene_symbol")} · 면역 활성 점수 · {selection_label}</div>'
-        f'<div class="meta">{identity.get("gene_id") or ""} · 세포주 {factors.get("n_cell_lines") or 0}개</div></div>',
+        f'<div class="pred-score"><div>{identity.get("gene_symbol")} · 세포주별 면역 활성 점수 · {selection_label}</div>'
+        f'<div class="meta">{identity.get("gene_id") or ""} · 세포주 {result.get("n_cell_lines") or 0}개 · '
+        f"각 행이 그 세포주의 점수입니다.</div></div>",
         unsafe_allow_html=True,
     )
-    rows = [
-        {
-            "factor": "TAA 발현",
-            "value": factors.get("taa_median_nTPM"),
-            "unit": "nTPM median",
-            "scaled_0_1": factors.get("taa_expression_0_1"),
-            "source": "HPA cancer cell-line RNA",
-        },
-        {
-            "factor": "Cell-to-cell interaction",
-            "value": factors.get("contact_median_nTPM"),
-            "unit": "nTPM median of HLA-A, HLA-B, B2M, ICAM1, CD58",
-            "scaled_0_1": factors.get("contact_0_1"),
-            "source": "HPA cancer cell-line RNA, same lines",
-        },
-        {
-            "factor": "Binding hindrance",
-            "value": hindrance.get("hindrance_0_1"),
-            "unit": "0-1 from extracellular length and N-glycans",
-            "scaled_0_1": hindrance.get("hindrance_0_1"),
-            "source": hindrance.get("uniprot_url") or "UniProt",
-        },
-    ]
-    st.dataframe(pd.DataFrame(rows), width="stretch", hide_index=True)
     detail = (
+        f"결합 방해 {hindrance.get('hindrance_0_1') if hindrance.get('hindrance_0_1') is not None else '없음'} · "
         f"세포외 길이 {hindrance.get('ecd_aa') if hindrance.get('ecd_aa') is not None else '없음'} aa · "
         f"세포외 N-glycan {hindrance.get('n_glycan_extracellular') if hindrance.get('n_glycan_extracellular') is not None else '없음'} · "
-        f"{hindrance.get('location_class') or 'location 없음'}"
+        f"{hindrance.get('location_class') or 'location 없음'}. "
+        "결합 방해는 단백질 값이라 모든 세포주 행에 같습니다."
     )
     if hindrance.get("reason"):
-        detail = f"{detail}. {hindrance['reason']}"
+        detail = f"{detail} {hindrance['reason']}"
     st.caption(detail)
-    per_cancer = result["per_cancer"]
-    if per_cancer is not None and not per_cancer.empty:
-        st.markdown("**암종별**")
-        st.dataframe(per_cancer, width="stretch", hide_index=True)
-        st.download_button(
-            "암종 점수 CSV",
-            export_frame(per_cancer),
-            file_name=f"{identity.get('gene_symbol')}_immune_score.csv",
-            mime="text/csv",
-            key="pred_csv",
-        )
-    contact_genes = result["contact_genes"]
-    if contact_genes is not None and not contact_genes.empty:
-        with st.expander("접촉 분자별 nTPM"):
-            st.dataframe(contact_genes, width="stretch", hide_index=True)
+    if per_line is None or per_line.empty:
+        st.info("선택한 범위에 점수를 낼 세포주가 없습니다.")
+        return
+    figure = _chart(per_line)
+    if figure is not None:
+        st.plotly_chart(figure, width="stretch")
+    st.dataframe(
+        per_line,
+        width="stretch",
+        hide_index=True,
+        column_config={
+            "cell_line": "세포주",
+            "cancer": "암종",
+            "taa_nTPM": st.column_config.NumberColumn("TAA nTPM", format="%.2f"),
+            "contact_nTPM": st.column_config.NumberColumn("접촉 nTPM", format="%.2f"),
+            "hindrance_0_1": st.column_config.NumberColumn("결합 방해", format="%.3f"),
+            "score": st.column_config.NumberColumn("점수", format="%.1f"),
+        },
+    )
+    st.download_button(
+        "세포주 점수 CSV",
+        export_frame(per_line),
+        file_name=f"{identity.get('gene_symbol')}_cell_line_scores.csv",
+        mime="text/csv",
+        key="pred_csv",
+    )
     with st.expander("점수 계산"):
         st.write(formula_text())
 
@@ -90,7 +104,7 @@ def render_prediction() -> None:
     st.markdown("## TAA 면역 활성 예측")
     st.caption(
         "TAA를 검색한 뒤, 암종 전체 또는 human cancer cell line을 여러 개 고릅니다. "
-        "TAA 발현, 세포 간 접촉, 결합 방해를 숫자로 보여주고 면역 활성 점수로 합칩니다."
+        "점수는 세포주마다 따로 나옵니다. TAA 발현과 세포 간 접촉은 그 세포주 값이고, 결합 방해는 같은 단백질 값입니다."
     )
     gene = st.text_input(
         "TAA / Gene",

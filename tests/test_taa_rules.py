@@ -435,30 +435,30 @@ class ImmuneActivationTests(unittest.TestCase):
             ]
         )
 
-    def test_cancer_selection_drops_unknown_and_ranks_expression(self):
+    def test_each_cell_line_gets_its_own_score(self):
         chosen = select_lines(self._lines(), cancers=["Breast Carcinoma", "Lung Adenocarcinoma"])
         self.assertEqual(set(chosen["cell_line"]), {"MCF-7", "BT-474", "A549"})
         result = score_lines(chosen, self._contact(), hindrance=0.2)
-        breast = result["per_cancer"][result["per_cancer"]["cancer"] == "Breast Carcinoma"].iloc[0]
-        lung = result["per_cancer"][result["per_cancer"]["cancer"] == "Lung Adenocarcinoma"].iloc[0]
-        self.assertAlmostEqual(float(breast["taa_median_nTPM"]), 20.0)
-        self.assertGreater(float(breast["score"]), float(lung["score"]))
-        self.assertTrue(0 <= float(result["score"]) <= 100)
+        table = result["per_line"].set_index("cell_line")
+        self.assertEqual(set(table.index), {"MCF-7", "BT-474", "A549"})
+        self.assertAlmostEqual(float(table.loc["BT-474", "taa_nTPM"]), 30.0)
+        self.assertAlmostEqual(float(table.loc["MCF-7", "taa_nTPM"]), 10.0)
+        self.assertAlmostEqual(float(table.loc["MCF-7", "contact_nTPM"]), 30.0)
+        self.assertGreater(float(table.loc["BT-474", "score"]), float(table.loc["MCF-7", "score"]))
+        self.assertGreater(float(table.loc["MCF-7", "score"]), float(table.loc["A549", "score"]))
+        self.assertTrue(0 <= float(table.loc["BT-474", "score"]) <= 100)
+        self.assertEqual(result["per_line"].iloc[0]["cell_line"], "BT-474")
 
     def test_cell_line_multiselect_uses_only_those_lines(self):
-        one = select_lines(self._lines(), cell_lines=["A549"])
-        many = select_lines(self._lines(), cancers=["Breast Carcinoma"])
-        low = score_lines(one, self._contact(), hindrance=0.2)
-        high = score_lines(many, self._contact(), hindrance=0.2)
-        self.assertEqual(int(low["factors"]["n_cell_lines"]), 1)
-        self.assertAlmostEqual(float(low["factors"]["taa_median_nTPM"]), 1.0)
-        self.assertGreater(float(high["factors"]["taa_median_nTPM"]), float(low["factors"]["taa_median_nTPM"]))
+        one = score_lines(select_lines(self._lines(), cell_lines=["A549"]), self._contact(), hindrance=0.2)
+        self.assertEqual(list(one["per_line"]["cell_line"]), ["A549"])
+        self.assertAlmostEqual(float(one["per_line"].iloc[0]["taa_nTPM"]), 1.0)
 
     def test_missing_hindrance_is_not_treated_as_zero(self):
         chosen = select_lines(self._lines(), cell_lines=["MCF-7"])
-        missing = score_lines(chosen, self._contact(), hindrance=None)
-        zero = score_lines(chosen, self._contact(), hindrance=0.0)
-        self.assertNotAlmostEqual(float(missing["score"]), float(zero["score"]))
+        missing = score_lines(chosen, self._contact(), hindrance=None)["per_line"].iloc[0]["score"]
+        zero = score_lines(chosen, self._contact(), hindrance=0.0)["per_line"].iloc[0]["score"]
+        self.assertNotAlmostEqual(float(missing), float(zero))
 
     def test_glycans_outside_the_extracellular_domain_do_not_count(self):
         features = [
