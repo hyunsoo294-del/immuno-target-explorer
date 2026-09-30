@@ -10,11 +10,12 @@ patterns:
   suspension_clumped: {accessibility: 0.45, desc: "부유 응집"}
 
 cell_lines:
-  Calu-3:      {pattern: monolayer_flat,    accessibility: 1.00, source: estimated}
-  HCC1954:     {pattern: monolayer_mixed,   accessibility: 0.80, source: estimated}
-  NCI-N87:     {pattern: adherent_clumped,  accessibility: 0.60, source: estimated}
-  SK-BR-3:     {pattern: adherent_clumped,  accessibility: 0.55, source: estimated}
-  MDA-MB-231:  {pattern: scattered_spindle, accessibility: 0.90, source: estimated}
+  # mean_diameter_um is null until microscopy fills it. Null stays out of the score.
+  Calu-3:      {pattern: monolayer_flat,    accessibility: 1.00, mean_diameter_um: null, source: estimated}
+  HCC1954:     {pattern: monolayer_mixed,   accessibility: 0.80, mean_diameter_um: null, source: estimated}
+  NCI-N87:     {pattern: adherent_clumped,  accessibility: 0.60, mean_diameter_um: null, source: estimated}
+  SK-BR-3:     {pattern: adherent_clumped,  accessibility: 0.55, mean_diameter_um: null, source: estimated}
+  MDA-MB-231:  {pattern: scattered_spindle, accessibility: 0.90, mean_diameter_um: null, source: estimated}
 
 default:
   # unlisted lines fall back to GrowthPattern from DepMap Model.csv

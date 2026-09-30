@@ -1,4 +1,15 @@
 # Every threshold the scorer uses. Refit by editing this file, not the Python.
+# A factor whose sub-score SD across the result set is below this has no
+# ranking power. scoring.py drops it from the weighted sum and renormalizes.
+variance_eps: 1.0
+
+# Contact area also depends on cell diameter. The formula is
+# accessibility * (mean_diameter_um / d_ref_um)^2.
+# It stays off until diameters are measured. A null reference does not invent one.
+cell_size:
+  use_cell_size: false
+  d_ref_um: null
+
 assay_duration_h_default: 24
 assay_duration_h_min: 6
 assay_duration_h_max: 36
@@ -107,6 +118,7 @@ flag_labels:
   LOW_ACCESSIBILITY: 접근성낮음
   ACCESSIBILITY_ESTIMATED: 형태추정
   ZERO_VARIANCE_FACTOR: 무변별인자
+  EXTRAPOLATED: 외삽
   HIGH_HETEROGENEITY: 불균일
   MUCIN_HIGH: 당질층높음
   JAK_LOSS: JAK소실

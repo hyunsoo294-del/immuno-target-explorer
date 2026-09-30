@@ -8,7 +8,7 @@ exists. Otherwise a single default pos_frac and CV from scoring_params.yaml, mar
 f2_source=default. Nothing is imputed silently.
 
 Limitation: the default is the same number on every line, so it does not rank lines.
-It keeps the weight from being dropped while telling the user the factor is not measured.
+scoring.py then drops that constant from the weighted sum. The value stays visible.
 Heuristic for panel selection, not a predictor.
 """
 

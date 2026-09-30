@@ -135,6 +135,62 @@ class ScoreTests(unittest.TestCase):
         self.assertIn("LOW_CONFIDENCE", mid["flags"])
         self.assertEqual(mid["confidence"], "LOW")
 
+    def test_constant_factor_is_removed_from_the_sum(self):
+        import json
+
+        models, cfg = _fixture()
+        result = score_models(models, "ERBB2", "CD3", "PBMC", cfg)
+        dropped = result.iloc[0]["zero_variance_factors"].split(",")
+        self.assertIn("F7_epitope_proximity", dropped)
+        effective = json.loads(result.iloc[0]["effective_weights"])
+        self.assertNotIn("F7_epitope_proximity", effective)
+        self.assertAlmostEqual(sum(effective.values()), 100.0, places=6)
+        text = result.iloc[0]["flag_text"]
+        self.assertIn("무변별인자(", text)
+        self.assertIn("균일성", text)
+        self.assertIn("에피톱", text)
+
+    def test_a_single_line_keeps_constant_factors(self):
+        models, cfg = _fixture()
+        result = score_models(models.iloc[:1], "ERBB2", "CD3", "PBMC", cfg)
+        self.assertEqual(result.iloc[0]["zero_variance_factors"], "")
+        self.assertNotIn("ZERO_VARIANCE_FACTOR", result.iloc[0]["flags"])
+
+    def test_cell_size_stays_out_until_diameter_and_flag_exist(self):
+        from immunoscore.src.data.morphology import effective_accessibility
+
+        configs = _configs()
+        params = configs["params"]
+        self.assertFalse(params["cell_size"]["use_cell_size"])
+        self.assertIsNone(params["cell_size"]["d_ref_um"])
+        plain, source = effective_accessibility("Calu-3", "CALU3", "Adherent", configs["morphology"], params)
+        self.assertEqual(plain, 1.0)
+        self.assertEqual(source, "curated")
+        enabled = {"cell_size": {"use_cell_size": True, "d_ref_um": 15}}
+        still, _source = effective_accessibility("Calu-3", "CALU3", "Adherent", configs["morphology"], enabled)
+        self.assertEqual(still, 1.0)
+        morphology = {"cell_lines": {"LOW": {"accessibility": 1.0, "mean_diameter_um": 30}}, "default": {}}
+        scaled, _source = effective_accessibility("LOW", "LOW", "Adherent", morphology, enabled)
+        self.assertAlmostEqual(scaled, 4.0, places=6)
+
+    def test_accessibility_spacing_is_not_steepened(self):
+        lines = _configs()["morphology"]["cell_lines"]
+        self.assertAlmostEqual(lines["Calu-3"]["accessibility"], 1.00)
+        self.assertAlmostEqual(lines["HCC1954"]["accessibility"], 0.80)
+        self.assertAlmostEqual(lines["NCI-N87"]["accessibility"], 0.60)
+        self.assertAlmostEqual(lines["SK-BR-3"]["accessibility"], 0.55)
+        self.assertAlmostEqual(lines["MDA-MB-231"]["accessibility"], 0.90)
+
+    def test_fitted_jurkat_weights_are_not_copied(self):
+        combinations = _configs()["weights"]["combinations"]
+        fitted = combinations["4-1BB__Jurkat_NFkB"]["weights"]
+        for name, spec in combinations.items():
+            if name == "4-1BB__Jurkat_NFkB":
+                self.assertNotIn("not fitted", spec["fitted_on"])
+                continue
+            self.assertNotEqual(spec["weights"], fitted, name)
+            self.assertIn("not fitted", spec["fitted_on"])
+
 
 class GateTests(unittest.TestCase):
     def test_hill_gate_at_jurkat_nfkb_abc50(self):
@@ -163,17 +219,31 @@ class GateTests(unittest.TestCase):
         load_configs.cache_clear()
         identity = gene_identity("HER2")
         cfg = build_cfg({"taa_entry": identity["curated_entry"]})
-        names = ["Calu-3", "HCC1954", "NCI-N87", "MDA-MB-231"]
+        names = ["Calu-3", "HCC1954", "NCI-N87", "SK-BR-3", "MDA-MB-231"]
         chosen = cfg["models"][cfg["models"]["CellLineName"].isin(names)]
         result = score_models(chosen, identity["gene_symbol"], "4-1BB", "Jurkat_NFkB", cfg)
-        expected = {"Calu-3": 42.4, "HCC1954": 40.3, "NCI-N87": 37.9, "MDA-MB-231": 2.9}
+        expected = {
+            "Calu-3": 39.2,
+            "HCC1954": 35.0,
+            "NCI-N87": 32.0,
+            "SK-BR-3": 28.8,
+            "MDA-MB-231": 2.7,
+        }
         got = {}
         for name, score in expected.items():
             value = round(float(result.loc[result["cell_line"] == name, "score"].iloc[0]), 1)
             got[name] = value
             self.assertEqual(value, score, name)
         order = [name for name, _score in sorted(got.items(), key=lambda item: -item[1])]
-        self.assertEqual(order, ["Calu-3", "HCC1954", "NCI-N87", "MDA-MB-231"])
+        self.assertEqual(order, names)
+        import json
+
+        effective = json.loads(result.iloc[0]["effective_weights"])
+        labels = load_configs()["weights"]["factor_labels"]
+        shown = {labels[factor]: round(weight, 1) for factor, weight in effective.items()}
+        self.assertEqual(shown, {"접촉": 47.6, "내재화": 28.6, "당질층": 23.8})
+        self.assertIn("균일성", result.iloc[0]["flag_text"])
+        self.assertIn("에피톱", result.iloc[0]["flag_text"])
 
 
 if __name__ == "__main__":

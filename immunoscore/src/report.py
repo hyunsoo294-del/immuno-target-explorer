@@ -21,6 +21,7 @@ DISPLAY_COLUMNS = [
     ("F6_glycocalyx", "당질층"),
     ("F7_epitope_proximity", "에피톱"),
     ("score", "점수"),
+    ("emax_text", "예측 Emax"),
     ("confidence", "신뢰도"),
     ("flag_text", "플래그"),
 ]
@@ -41,8 +42,8 @@ def display_frame(result: pd.DataFrame) -> pd.DataFrame:
     for source, label in DISPLAY_COLUMNS:
         if source == "confidence":
             frame[label] = result[source].map(lambda value: labels.get(value, value))
-        elif source in ("cell_line", "cancer", "flag_text"):
-            frame[label] = result[source]
+        elif source in ("cell_line", "cancer", "flag_text", "emax_text"):
+            frame[label] = result[source] if source in result.columns else ""
         elif source == "accessibility_label":
             frame[label] = result.apply(_access_label, axis=1)
         elif source == "F4_checkpoint":
@@ -65,16 +66,28 @@ def to_excel(result: pd.DataFrame, request: dict) -> bytes:
         if factor.startswith("F"):
             factor_cols.extend([factor, factor + "_tier", factor + "_detail"])
     breakdown = result[[column for column in factor_cols if column in result.columns]].copy()
-    provenance = pd.DataFrame(
-        [
-            {"key": "request", "value": json.dumps(request, ensure_ascii=False)},
-            {"key": "manifest", "value": json.dumps(request.get("manifest") or {}, ensure_ascii=False)},
-            {
-                "key": "disclaimer",
-                "value": "Preliminary panel-selection heuristic. Not a validated predictor of assay Emax.",
-            },
-        ]
-    )
+    provenance_rows = [
+        {"key": "request", "value": json.dumps(request, ensure_ascii=False)},
+        {"key": "manifest", "value": json.dumps(request.get("manifest") or {}, ensure_ascii=False)},
+        {
+            "key": "effective_weights",
+            "value": json.dumps(request.get("effective_weights") or {}, ensure_ascii=False),
+        },
+        {
+            "key": "nominal_weights",
+            "value": json.dumps(request.get("nominal_weights") or {}, ensure_ascii=False),
+        },
+        {
+            "key": "calibration",
+            "value": json.dumps(request.get("calibration") or {}, ensure_ascii=False),
+        },
+        {
+            "key": "disclaimer",
+            "value": "Preliminary panel-selection heuristic. Not a validated predictor of assay Emax. "
+            "The Emax column is a monotone calibration of the score and does not re-rank lines.",
+        },
+    ]
+    provenance = pd.DataFrame(provenance_rows)
     buffer = BytesIO()
     with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
         ranked.to_excel(writer, sheet_name="Ranked", index=False)

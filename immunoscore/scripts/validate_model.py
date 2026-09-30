@@ -16,6 +16,7 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from immunoscore.src.calibration import attach_calibration  # noqa: E402
 from immunoscore.src.config_loader import DATA_DIR  # noqa: E402
 from immunoscore.src.genes import gene_identity  # noqa: E402
 from immunoscore.src.scoring import build_cfg, score_models  # noqa: E402
@@ -57,6 +58,7 @@ def evaluate(measured: pd.DataFrame | None = None) -> str:
         names = group["cell_line"].astype(str).tolist()
         chosen = cfg["models"][cfg["models"]["CellLineName"].isin(names)]
         predicted = score_models(chosen, identity["gene_symbol"], str(arm), str(effector), cfg)
+        predicted, fit = attach_calibration(predicted, identity["gene_symbol"], str(arm), str(effector), cfg)
         merged = group.merge(predicted, left_on="cell_line", right_on="cell_line", how="left")
         n = int(merged["score"].notna().sum())
         lines.append(f"## {taa} × {arm} × {effector}")
@@ -85,12 +87,30 @@ def evaluate(measured: pd.DataFrame | None = None) -> str:
             lines.append(f"- Predicted dynamic range: {pred_range:.2f}x")
             lines.append(f"- Measured dynamic range: {meas_range:.2f}x")
         lines.append("")
-        lines.append("| cell line | score | Emax |")
-        lines.append("|---|---:|---:|")
+        lines.append("| cell line | score | predicted Emax | measured Emax | ratio |")
+        lines.append("|---|---:|---:|---:|---:|")
         for record in merged.sort_values("emax_value", ascending=False).itertuples(index=False):
             score = record.score
             score_text = "" if pd.isna(score) else f"{float(score):.1f}"
-            lines.append(f"| {record.cell_line} | {score_text} | {int(record.emax_value)} |")
+            pred = getattr(record, "emax_pred", float("nan"))
+            if pd.isna(pred):
+                pred_text = ""
+                ratio_text = ""
+            else:
+                pred_text = f"{float(pred):,.0f}"
+                ratio_text = f"{float(pred) / float(record.emax_value):.2f}"
+            lines.append(
+                f"| {record.cell_line} | {score_text} | {pred_text} | {int(record.emax_value)} | {ratio_text} |"
+            )
+        lines.append("")
+        if fit.get("ok"):
+            lines.append(fit["caption"])
+            lines.append("")
+            lines.append("Calibration is a monotone transform of the score. It does not re-rank.")
+        else:
+            lines.append("캘리브레이션 없음 — 순위만 유효")
+            lines.append("")
+            lines.append(fit.get("reason") or "")
         lines.append("")
         lines.append(
             "Per-factor Spearman with log10(Emax). The antigen-positive column keeps lines with "

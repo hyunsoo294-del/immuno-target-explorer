@@ -2,8 +2,8 @@
 
 F1 is a gate. It multiplies the weighted sum of the other factors and does not
 add a constant. A factor the effector gates off has weight 0 and is left out of
-the sum. Missing factors are NaN, never 0, and the remaining weights are
-renormalized.
+the sum. A factor with no variance across the result set is also left out, and
+the remaining weights are renormalized to 100. Missing factors are NaN, never 0.
 
 In a fixed effector-to-target reporter the ceiling is the fraction of effector
 cells that form a productive conjugate. Density is a threshold. Above that
@@ -15,12 +15,14 @@ This is a panel-selection heuristic, not a validated predictor of assay Emax.
 
 from __future__ import annotations
 
+import json
+
 import numpy as np
 import pandas as pd
 
 from immunoscore.src.confidence import cap_confidence, completeness, row_confidence
 from immunoscore.src.config_loader import combination_key
-from immunoscore.src.data.morphology import lookup_accessibility
+from immunoscore.src.data.morphology import effective_accessibility
 from immunoscore.src.factors import FACTORS
 
 
@@ -73,7 +75,9 @@ def apply_effector_gating(
             growth = meta.get("GrowthPattern") or ""
         else:
             cell_name, stripped, growth = "", "", ""
-        value, source = lookup_accessibility(str(cell_name), str(stripped), str(growth), morphology)
+        value, source = effective_accessibility(
+            str(cell_name), str(stripped), str(growth), morphology, cfg.get("params")
+        )
         access_values.append(value)
         access_sources.append(source)
     f5["accessibility"] = access_values
@@ -138,6 +142,45 @@ def _flags_for_row(
     return flags
 
 
+def format_flag_text(flags: list[str], labels: dict, zero_names: list[str] | None = None) -> str:
+    """Join flag labels. A zero-variance flag names the factors it dropped."""
+    names = [name for name in (zero_names or []) if name]
+    parts = []
+    for flag in flags:
+        label = labels.get(flag, flag)
+        if flag == "ZERO_VARIANCE_FACTOR" and names:
+            label = f"{label}({','.join(names)})"
+        parts.append(label)
+    return " ".join(parts)
+
+
+def _low_variance_factors(parts: dict, model_ids: pd.Series, weights: dict, variance_eps: float) -> list[str]:
+    """Factors whose sub-score SD is below variance_eps. n < 2 does not drop."""
+    ids = pd.Index(pd.Series(model_ids).astype(str))
+    excluded = []
+    for factor, weight in weights.items():
+        if factor == "F1_expression" or float(weight) <= 0 or factor not in parts:
+            continue
+        series = pd.to_numeric(parts[factor]["sub_score"], errors="coerce").reindex(ids)
+        spread = series.std(ddof=1, skipna=True)
+        if pd.notna(spread) and float(spread) < float(variance_eps):
+            excluded.append(factor)
+    return excluded
+
+
+def _renormalized_weights(weights: dict, excluded: list[str]) -> dict[str, float]:
+    """Drop excluded factors and scale the rest so they sum to 100."""
+    kept = {
+        factor: float(weight)
+        for factor, weight in weights.items()
+        if factor != "F1_expression" and float(weight) > 0 and factor not in excluded
+    }
+    total = float(sum(kept.values()))
+    if total <= 0:
+        return {}
+    return {factor: 100.0 * weight / total for factor, weight in kept.items()}
+
+
 def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cfg: dict) -> pd.DataFrame:
     if cell_lines.empty:
         return pd.DataFrame()
@@ -150,6 +193,11 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
     inert = apply_effector_gating(parts, effector, cfg, lines)
     key = combination_key(arm, effector, bool(cfg.get("jurkat_pd1")))
     weights = dict(cfg["weights"]["combinations"][key]["weights"])
+    variance_eps = float(cfg["params"]["variance_eps"])
+    excluded = _low_variance_factors(parts, lines["ModelID"], weights, variance_eps)
+    effective = _renormalized_weights(weights, excluded)
+    factor_labels = cfg["weights"].get("factor_labels") or {}
+    zero_names = [factor_labels.get(factor, factor) for factor in excluded]
     gate_exponent = float((cfg["params"].get("f1_expression") or {}).get("gate_exponent") or 1.0)
     expr = cfg["expression"]
     taa_series = expr[taa] if taa in expr.columns else pd.Series(dtype=float)
@@ -184,8 +232,8 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
             gate = (float(s1) / 100.0) ** gate_exponent
         available = {
             factor: float(weight)
-            for factor, weight in weights.items()
-            if factor != "F1_expression" and float(weight) > 0 and pd.notna(scores.get(factor))
+            for factor, weight in effective.items()
+            if pd.notna(scores.get(factor))
         }
         weight_sum = float(sum(available.values()))
         if weight_sum <= 0 or pd.isna(gate):
@@ -252,6 +300,8 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
             "pos_frac": pos_frac,
             "taa_log2tpm": taa_log,
             "inert_factors": ",".join(inert),
+            "effective_weights": json.dumps(effective, sort_keys=True),
+            "zero_variance_factors": ",".join(excluded),
         }
         for factor_id, _function in FACTORS:
             row[factor_id] = scores[factor_id]
@@ -271,42 +321,15 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
             ramos_positive=ramos_positive,
             surfaceome_missing=surfaceome_missing,
         )
+        if excluded:
+            flags.append("ZERO_VARIANCE_FACTOR")
         labels = cfg["params"]["flag_labels"]
         row["flags"] = flags
-        row["flag_text"] = " ".join(labels.get(flag, flag) for flag in flags)
+        row["flag_text"] = format_flag_text(flags, labels, zero_names)
         rows.append(row)
     result = pd.DataFrame(rows)
-    result = _flag_zero_variance(result, weights, cfg["params"])
     result = result.sort_values(["score", "taa_log2tpm"], ascending=[False, False], na_position="last")
     return result.reset_index(drop=True)
-
-
-def _flag_zero_variance(result: pd.DataFrame, weights: dict, params: dict) -> pd.DataFrame:
-    """A constant factor cannot rank lines. Keep it in the score and say so."""
-    if len(result) < 2:
-        result["zero_variance_factors"] = ""
-        return result
-    constant = []
-    for factor, weight in weights.items():
-        if factor == "F1_expression" or float(weight) <= 0 or factor not in result.columns:
-            continue
-        series = pd.to_numeric(result[factor], errors="coerce").dropna()
-        if len(series) >= 2 and int(series.nunique()) <= 1:
-            constant.append(factor)
-    result["zero_variance_factors"] = ",".join(constant)
-    if not constant:
-        return result
-    labels = params["flag_labels"]
-
-    def _add(flags):
-        items = list(flags or [])
-        if "ZERO_VARIANCE_FACTOR" not in items:
-            items.append("ZERO_VARIANCE_FACTOR")
-        return items
-
-    result["flags"] = result["flags"].map(_add)
-    result["flag_text"] = result["flags"].map(lambda items: " ".join(labels.get(flag, flag) for flag in items))
-    return result
 
 
 def _ramos_expresses(taa: str, expr: pd.DataFrame, lines: pd.DataFrame, cfg: dict) -> bool:

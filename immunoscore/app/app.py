@@ -5,11 +5,15 @@ streamlit run app.py
 
 from __future__ import annotations
 
+import html
+import json
+
 import numpy as np
 import pandas as pd
 import streamlit as st
 
 from immunoscore.app.components.results import render_results
+from immunoscore.src.calibration import attach_calibration
 from immunoscore.src.config_loader import combination_key, load_configs
 from immunoscore.src.genes import gene_identity
 from immunoscore.src.scoring import build_cfg, score_models
@@ -39,18 +43,41 @@ def _cached_cfg() -> dict:
     return build_cfg()
 
 
-def _weight_caption(arm: str, effector: str, jurkat_pd1: bool) -> str:
+def _ranked_weights(weights: dict, labels: dict, order: list, digits: int | None) -> str:
+    ranked = sorted(weights.items(), key=lambda item: (-item[1], order.index(item[0]) if item[0] in order else 99))
+    parts = []
+    for factor, weight in ranked:
+        if float(weight) <= 0:
+            continue
+        label = labels.get(factor, factor)
+        number = f"{float(weight):.{digits}f}" if digits is not None else f"{float(weight):g}"
+        parts.append(f"{label} {number}")
+    return " / ".join(parts)
+
+
+def _weight_caption(arm: str, effector: str, jurkat_pd1: bool, effective: dict | None = None) -> tuple[str, str]:
+    """Return (visible caption, nominal tooltip). Tooltip is empty before a result exists."""
     configs = load_configs()
     key = combination_key(arm, effector, jurkat_pd1)
     spec = configs["weights"]["combinations"][key]
     order = configs["weights"]["factor_display_order"]
     labels = configs["weights"]["factor_labels"]
     readout = configs["weights"]["readout_labels"].get(spec["readout"], spec["readout"])
-    ranked = sorted(spec["weights"].items(), key=lambda item: (-item[1], order.index(item[0]) if item[0] in order else 99))
-    weights = " / ".join(f"{labels[factor]} {weight:g}" for factor, weight in ranked)
+    nominal = _ranked_weights(spec["weights"], labels, order, None)
     fitted = str(spec.get("fitted_on") or "")
     fit_tag = "미적합" if "not fitted" in fitted else "실측 적합"
-    return f"{arm} × {effector} — {readout} readout · 가중치: {weights} · × 발현게이트 · {fit_tag}"
+    if effective:
+        shown = _ranked_weights(effective, labels, order, 1)
+        text = f"{arm} × {effector} — {readout} readout · 유효 가중치: {shown} · × 발현게이트 · {fit_tag}"
+        return text, f"명목 가중치: {nominal}"
+    text = f"{arm} × {effector} — {readout} readout · 가중치: {nominal} · × 발현게이트 · {fit_tag}"
+    return text, ""
+
+
+def _nominal_weights(arm: str, effector: str, jurkat_pd1: bool) -> dict:
+    configs = load_configs()
+    key = combination_key(arm, effector, jurkat_pd1)
+    return dict(configs["weights"]["combinations"][key]["weights"])
 
 
 def _jurkat_notice(arm: str, effector: str, jurkat_pd1: bool) -> str:
@@ -70,11 +97,28 @@ def _jurkat_notice(arm: str, effector: str, jurkat_pd1: bool) -> str:
     )
 
 
-def _score(cfg: dict, models: pd.DataFrame, identity: dict, arm: str, effector: str, settings: dict) -> pd.DataFrame:
+def _runtime(cfg: dict, identity: dict, settings: dict) -> dict:
     runtime = dict(cfg)
     runtime.update(settings)
     runtime["taa_entry"] = identity["curated_entry"]
-    return score_models(models, identity["gene_symbol"], arm, effector, runtime)
+    return runtime
+
+
+def _score(cfg: dict, models: pd.DataFrame, identity: dict, arm: str, effector: str, settings: dict):
+    runtime = _runtime(cfg, identity, settings)
+    result = score_models(models, identity["gene_symbol"], arm, effector, runtime)
+    result, calibration = attach_calibration(result, identity["gene_symbol"], arm, effector, runtime)
+    return result, calibration
+
+
+def _same_request(request: dict, symbol: str, arm: str, effector: str, jurkat_pd1: bool) -> bool:
+    return bool(
+        request
+        and request.get("gene") == symbol
+        and request.get("arm") == arm
+        and request.get("effector") == effector
+        and bool(request.get("jurkat_pd1")) == bool(jurkat_pd1)
+    )
 
 
 def render() -> None:
@@ -128,7 +172,7 @@ def render() -> None:
 
     st.divider()
     arm_row = st.container()
-    caption_slot = st.container()
+    caption_box = st.empty()
     scope_slot = st.container()
     advanced_slot = st.container()
     if "arm" not in st.session_state:
@@ -165,8 +209,26 @@ def render() -> None:
         "hill_h_override": hill_override,
         "jurkat_pd1": jurkat_pd1,
     }
-    with caption_slot:
-        st.caption(_weight_caption(arm, effector, jurkat_pd1 and str(effector).startswith("Jurkat")))
+    pd1_on = bool(jurkat_pd1 and str(effector).startswith("Jurkat"))
+
+    def _paint_caption(effective: dict | None) -> None:
+        text, tip = _weight_caption(arm, effector, pd1_on, effective)
+        if tip:
+            caption_box.markdown(
+                f'<p title="{html.escape(tip, quote=True)}" style="color:#6b7280;font-size:0.875rem;margin:0;">{html.escape(text)}</p>',
+                unsafe_allow_html=True,
+            )
+        else:
+            caption_box.caption(text)
+
+    held = st.session_state.get("request") or {}
+    held_result = st.session_state.get("result")
+    held_effective = None
+    if _same_request(held, symbol, arm, effector, jurkat_pd1) and held_result is not None and len(held_result):
+        raw = held_result.iloc[0].get("effective_weights")
+        if raw:
+            held_effective = json.loads(raw)
+    _paint_caption(held_effective)
 
     gene_values = expression[symbol]
     diseases = sorted(models["cancer"].dropna().astype(str).unique())
@@ -222,7 +284,10 @@ def render() -> None:
                 st.warning("세포주를 먼저 고치세요.")
                 return
         with st.spinner("세포주별 점수를 계산하는 중"):
-            result = _score(cfg, chosen, identity, arm, effector, settings)
+            result, calibration = _score(cfg, chosen, identity, arm, effector, settings)
+        effective = {}
+        if len(result) and result.iloc[0].get("effective_weights"):
+            effective = json.loads(result.iloc[0]["effective_weights"])
         st.session_state["result"] = result
         st.session_state["request"] = {
             "gene": symbol,
@@ -235,12 +300,19 @@ def render() -> None:
             "abc50_base": abc50,
             "manifest": {key: manifest.get(key) for key in ("release", "release_id", "doi", "downloaded_at", "note")},
             "confidence_labels": params["confidence_labels"],
-            "jurkat_notice": _jurkat_notice(arm, effector, jurkat_pd1 and str(effector).startswith("Jurkat")),
+            "jurkat_notice": _jurkat_notice(arm, effector, pd1_on),
+            "effective_weights": effective,
+            "nominal_weights": _nominal_weights(arm, effector, pd1_on),
+            "calibration": {
+                key: calibration.get(key)
+                for key in ("ok", "caption", "reason", "a", "b", "r2", "n", "fit_date", "taa", "arm", "effector")
+            },
         }
+        _paint_caption(effective or None)
 
     result = st.session_state.get("result")
     request = st.session_state.get("request") or {}
-    if result is not None and request.get("gene") == symbol:
+    if result is not None and _same_request(request, symbol, arm, effector, jurkat_pd1):
         inert = []
         if "inert_factors" in result.columns and len(result):
             inert = [item for item in str(result.iloc[0]["inert_factors"]).split(",") if item]

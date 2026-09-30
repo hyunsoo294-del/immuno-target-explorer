@@ -11,6 +11,8 @@ INERT_LABELS = {
     "F4_checkpoint": "체크포인트",
     "F5_adhesion": "접촉",
 }
+STRING_COLUMNS = ("세포주", "암종", "체크포인트", "접근성", "신뢰도", "플래그", "예측 Emax")
+ZERO_VARIANCE_TIP = "이 결과 집합에서는 값이 거의 같아 순위에 쓰이지 않습니다."
 
 
 def render_results(result: pd.DataFrame, request: dict, inert_factors: list[str]) -> None:
@@ -32,19 +34,49 @@ def render_results(result: pd.DataFrame, request: dict, inert_factors: list[str]
     notice = request.get("jurkat_notice") or ""
     if notice:
         st.markdown(notice)
-    st.caption("발현(게이트)는 가산 점수가 아닙니다. 100은 ×1.00, 50은 ×0.50입니다. 점수는 그 배수를 F2–F7 가중 합에 곱한 값입니다.")
+    calibration = request.get("calibration") or {}
+    if calibration.get("ok") and calibration.get("caption"):
+        st.caption(calibration["caption"])
+    else:
+        st.caption("캘리브레이션 없음 — 순위만 유효")
+    st.caption("발현(게이트)는 가산 점수가 아닙니다. 100은 ×1.00, 50은 ×0.50입니다. 점수는 그 배수를 변별력이 있는 요인에 곱한 값입니다.")
     shown = display_frame(result)
-    grey_labels = [INERT_LABELS[factor] for factor in inert_factors if factor in INERT_LABELS]
+    zero_ids = []
+    if "zero_variance_factors" in result.columns and len(result):
+        zero_ids = [item for item in str(result.iloc[0]["zero_variance_factors"]).split(",") if item]
+    label_by_id = {source: label for source, label in DISPLAY_COLUMNS}
+    zero_labels = [label_by_id[factor] for factor in zero_ids if factor in label_by_id and label_by_id[factor] in shown.columns]
+    grey_labels = [INERT_LABELS[factor] for factor in inert_factors if factor in INERT_LABELS and INERT_LABELS[factor] in shown.columns]
     styler = shown.style
+    muted = list(dict.fromkeys(grey_labels + zero_labels))
+    if muted:
+        styler = styler.map(lambda _value: "color: #9aa0a6", subset=muted)
+    if "예측 Emax" in shown.columns:
+        styler = styler.map(
+            lambda value: "color: #9a6700" if isinstance(value, str) and "외삽" in value else "",
+            subset=["예측 Emax"],
+        )
+    tips = pd.DataFrame("", index=shown.index, columns=shown.columns)
+    for label in zero_labels:
+        tips[label] = ZERO_VARIANCE_TIP
+    for label in grey_labels:
+        tips[label] = "이 효과기에서는 이 요인을 점수에 넣지 않습니다."
+    styler = styler.set_tooltips(tips)
+    reason_bits = []
     if grey_labels:
-        styler = styler.map(lambda _value: "color: #9aa0a6", subset=grey_labels)
         reason = "이 효과기에서 정보가 없어 회색으로 둔 열: " + ", ".join(grey_labels)
         if "F5_adhesion" in inert_factors:
             reason += ". HEK293에는 종양 세포 ICAM1/CD58의 대응 수용체가 없습니다."
         if "F4_checkpoint" in inert_factors:
             reason += " 억제 수용체가 없는 효과기라 체크포인트는 — 이고 가중치는 0입니다."
-        st.caption(reason)
-    numeric = [column for column in shown.columns if column not in ("세포주", "암종", "체크포인트", "접근성", "신뢰도", "플래그")]
+        reason_bits.append(reason)
+    if zero_labels:
+        reason_bits.append(
+            "결과 집합에서 분산이 없어 점수에서 뺀 열: " + ", ".join(zero_labels) + ". 값은 그대로 보입니다."
+        )
+    if reason_bits:
+        st.caption(" ".join(reason_bits))
+    numeric = [column for column in shown.columns if column not in STRING_COLUMNS]
     styler = styler.format(precision=1, subset=numeric, na_rep="")
     styler = styler.background_gradient(subset=["점수"], cmap="YlGn", vmin=0, vmax=100)
     st.dataframe(styler, use_container_width=True, hide_index=True, height=460)
@@ -65,6 +97,9 @@ def render_results(result: pd.DataFrame, request: dict, inert_factors: list[str]
         gate_text = "" if pd.isna(gate) else f"×{float(gate) / 100:.2f}"
         st.markdown(f"발현(게이트) · {gate_text} · {'' if pd.isna(gate) else f'{float(gate):.1f}'}")
         st.caption(str(detail["F1_expression_detail"]))
+        emax_text = detail.get("emax_text") or ""
+        if emax_text:
+            st.markdown(f"예측 Emax · {emax_text}")
         access = detail.get("accessibility")
         access_text = "" if pd.isna(access) else f"{float(access):.2f}"
         st.markdown(f"접근성 · {access_text} · {detail.get('f5_accessibility_source')}")
@@ -79,4 +114,5 @@ def render_results(result: pd.DataFrame, request: dict, inert_factors: list[str]
             st.markdown(f"{label} ({source}) · {text} · {detail[source + '_tier']}")
             st.caption(str(detail[source + "_detail"]))
         if detail.get("zero_variance_factors"):
-            st.caption("결과 집합에서 값이 같은 요인: " + str(detail["zero_variance_factors"]))
+            named = ", ".join(label_by_id.get(item, item) for item in str(detail["zero_variance_factors"]).split(",") if item)
+            st.caption("이 요인들은 결과 집합에서 분산이 없어 점수에서 뺐습니다: " + named)
