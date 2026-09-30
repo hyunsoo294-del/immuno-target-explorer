@@ -1,0 +1,28 @@
+# Extracellular length weights. These are order-of-magnitude constants so that
+# a long mucin (MUC16) penalizes more than a short one (MUC13).
+# They are not measurements from this assay. confidence: unknown. No PMID is attached.
+mucins:
+  MUC16:
+    extracellular_length_nm: 500
+    confidence: unknown
+  MUC4:
+    extracellular_length_nm: 400
+    confidence: unknown
+  MUC1:
+    extracellular_length_nm: 200
+    confidence: unknown
+  MUC20:
+    extracellular_length_nm: 50
+    confidence: unknown
+  PODXL:
+    extracellular_length_nm: 40
+    confidence: unknown
+  PODXL2:
+    extracellular_length_nm: 40
+    confidence: unknown
+  SPN:
+    extracellular_length_nm: 45
+    confidence: unknown
+  MUC13:
+    extracellular_length_nm: 20
+    confidence: unknown

@@ -1,0 +1,22 @@
+{
+  "release": "DepMap Public 24Q4",
+  "release_id": "24Q4",
+  "doi": "10.25452/figshare.plus.27993248.v1",
+  "downloaded_at": "2026-09-30",
+  "portal_current_release_note": "DepMap portal file index is behind a Cloudflare challenge from this environment, so the newest public figshare mirror (24Q4) was used. Pass --release when a direct URL is available.",
+  "files": {
+    "Model.csv": {
+      "sha256": "b7a0c1385e6cef30132b56aff61f1261d11e3f490490b355c430d32ee0dbdcfa",
+      "bytes": 645696
+    },
+    "OmicsExpressionProteinCodingGenesTPMLogp1.csv": {
+      "sha256": "2a71dc94110efcc0221eae821bb93a9f03b54bea16f005818911a09d33383d56",
+      "bytes": 506628654
+    }
+  },
+  "expression_shape": [
+    1673,
+    19193
+  ],
+  "value": "log2(TPM+1)"
+}

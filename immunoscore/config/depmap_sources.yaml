@@ -1,0 +1,20 @@
+# Public file URLs. The portal file index is the preferred resolver.
+# Figshare mirrors exist only for releases that were actually published there.
+portal_files_api: https://depmap.org/portal/api/download/files
+needed_files:
+  - Model.csv
+  - OmicsExpressionProteinCodingGenesTPMLogp1.csv
+optional_files:
+  - OmicsSomaticMutations.csv
+mirrors:
+  "24Q4":
+    label: "DepMap Public 24Q4"
+    doi: "10.25452/figshare.plus.27993248.v1"
+    files:
+      Model.csv: https://ndownloader.figshare.com/files/51065297
+      OmicsExpressionProteinCodingGenesTPMLogp1.csv: https://ndownloader.figshare.com/files/51065489
+      OmicsSomaticMutations.csv: https://ndownloader.figshare.com/files/51065732
+  "24Q2":
+    label: "DepMap Public 24Q2"
+    doi: "10.25452/figshare.plus.25880521.v1"
+    files: {}

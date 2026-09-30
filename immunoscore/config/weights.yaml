@@ -1,0 +1,155 @@
+# Keyed as "<ARM>__<EFFECTOR>". All weight sets MUST sum to 100 (enforced by a test).
+readout_labels:
+  cytotoxicity: 세포독성
+  reporter_luminescence: 리포터 발광
+  cytokine_proliferation: 사이토카인/증식
+  SEAP_reporter: SEAP 리포터
+  activation_markers: 활성 마커
+
+# Tie-break when two weights are equal. Descending weight is the primary sort.
+factor_display_order:
+  - F1_expression
+  - F2_heterogeneity
+  - F5_adhesion
+  - F6_glycocalyx
+  - F4_checkpoint
+  - F3_internalization
+  - F7_epitope_proximity
+
+factor_labels:
+  F1_expression: 발현
+  F2_heterogeneity: 균일성
+  F3_internalization: 내재화
+  F4_checkpoint: 체크포인트
+  F5_adhesion: 접촉
+  F6_glycocalyx: 당질층
+  F7_epitope_proximity: 에피톱
+
+combinations:
+
+  CD3__PBMC:
+    readout: cytotoxicity
+    rationale: >
+      Full cytotoxic synapse. Antigen-negative subpopulations hard-cap observable Emax.
+      LFA-1/ICAM-1 and CD2/CD58 are rate-limiting for lytic granule delivery.
+      PD-1 is present on activated T cells within 24 h, so PD-L1 is a real term here —
+      the highest checkpoint weight of any combination.
+    weights:
+      F1_expression:        24
+      F2_heterogeneity:     20
+      F6_glycocalyx:        17
+      F5_adhesion:          17
+      F4_checkpoint:        11
+      F3_internalization:    8
+      F7_epitope_proximity:  3
+
+  CD3__Jurkat_NFAT:
+    readout: reporter_luminescence
+    rationale: >
+      NFAT-luc reporter measures TCR-proximal signaling, NOT killing. Tumor cell is a
+      crosslinking scaffold. Parental Jurkat NFAT lines do not express PD-1 (unless a
+      PD-1 reporter variant is used) -> checkpoint weight near zero. Jurkat LFA-1
+      activation is weaker than primary T cells, so adhesion is downweighted relative to
+      PBMC. Bulk luminescence dilutes rather than caps -> heterogeneity downweighted.
+      Set Jurkat PD-1 in the UI to switch to CD3__Jurkat_NFAT_PD1.
+    weights:
+      F1_expression:        30
+      F6_glycocalyx:        20
+      F2_heterogeneity:     14
+      F5_adhesion:          14
+      F3_internalization:   14
+      F7_epitope_proximity:  6
+      F4_checkpoint:         2
+
+  CD3__Jurkat_NFAT_PD1:
+    readout: reporter_luminescence
+    rationale: >
+      Same scaffold as CD3__Jurkat_NFAT, but the reporter is a PD-1 variant so the
+      checkpoint term is restored. Nine points move from F1 to F4 so the set still
+      sums to 100. This is a UI variant, not a wet-lab refit.
+    weights:
+      F1_expression:        21
+      F6_glycocalyx:        20
+      F2_heterogeneity:     14
+      F5_adhesion:          14
+      F3_internalization:   14
+      F4_checkpoint:        11
+      F7_epitope_proximity:  6
+
+  4-1BB__PBMC:
+    readout: cytokine_proliferation
+    rationale: >
+      Conditional agonist — activity requires TAA-mediated hyper-crosslinking, so antigen
+      DENSITY dominates and sustained surface presentation over 24 h matters
+      (internalization upweighted). Readout is bulk T-cell activation, not per-cell
+      killing, so heterogeneity dilutes rather than caps. Checkpoint contributes little
+      within a 24 h window on a costim axis.
+    weights:
+      F1_expression:        32
+      F6_glycocalyx:        18
+      F3_internalization:   15
+      F5_adhesion:          14
+      F2_heterogeneity:     13
+      F4_checkpoint:         4
+      F7_epitope_proximity:  4
+
+  4-1BB__Jurkat_NFkB:
+    readout: reporter_luminescence
+    rationale: >
+      Pure crosslinking-dependent NF-kB reporter. The most density-driven combination in
+      the panel: if crosslinking valency is insufficient, signal is flat regardless of
+      everything else. No lysis, no inhibitory receptors -> checkpoint ~0.
+    weights:
+      F1_expression:        34
+      F6_glycocalyx:        20
+      F3_internalization:   18
+      F2_heterogeneity:     12
+      F5_adhesion:           9
+      F7_epitope_proximity:  6
+      F4_checkpoint:         1
+
+  4-1BB__Jurkat_NFkB_PD1:
+    readout: reporter_luminescence
+    rationale: >
+      PD-1 variant of the 4-1BB Jurkat reporter. Eight points move from F1 to F4.
+      UI variant, not a wet-lab refit.
+    weights:
+      F1_expression:        26
+      F6_glycocalyx:        20
+      F3_internalization:   18
+      F2_heterogeneity:     12
+      F5_adhesion:           9
+      F4_checkpoint:         9
+      F7_epitope_proximity:  6
+
+  CD40__HEK:
+    readout: SEAP_reporter
+    rationale: >
+      HEK-Blue CD40 (NF-kB-SEAP). HEK293 lacks LFA-1, CD2 and the integrin synapse
+      machinery almost entirely, so tumor-cell ICAM1/CD58 have no counter-receptor ->
+      adhesion weight collapses to a residual non-specific term. No FcgR, no inhibitory
+      receptors -> checkpoint ~0. This makes the assay a nearly pure readout of
+      crosslinking density and steric accessibility.
+    weights:
+      F1_expression:        36
+      F6_glycocalyx:        22
+      F3_internalization:   19
+      F2_heterogeneity:     11
+      F7_epitope_proximity:  7
+      F5_adhesion:           4
+      F4_checkpoint:         1
+
+  CD40__Ramos:
+    readout: activation_markers
+    rationale: >
+      Ramos is a B cell with native CD40 and an intact LFA-1 / CD2 pathway, so adhesion is
+      restored to an intermediate weight versus HEK. More physiological crosslinking
+      geometry than HEK, but adds B-cell-intrinsic confounders (see flags).
+    weights:
+      F1_expression:        32
+      F6_glycocalyx:        20
+      F3_internalization:   17
+      F2_heterogeneity:     12
+      F5_adhesion:          12
+      F7_epitope_proximity:  6
+      F4_checkpoint:         1

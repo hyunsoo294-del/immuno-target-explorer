@@ -1,0 +1,73 @@
+# Effector systems. Scoring code reads these values; it does not hardcode them.
+arms:
+  CD3:
+    effectors: [PBMC, Jurkat_NFAT]
+    default_effector: PBMC
+  4-1BB:
+    effectors: [PBMC, Jurkat_NFkB]
+    default_effector: PBMC
+  CD40:
+    effectors: [HEK, Ramos]
+    default_effector: HEK
+
+effectors:
+  PBMC:
+    abc50_multiplier: 1.0
+    hill_h: 1.6
+    heterogeneity_mode: cap
+    donor_variability: high
+    synapse_competence: 1.0
+    has_inhibitory_receptors: true
+    checkpoint_inert: false
+    adhesion_inert: false
+    suspension: true
+    adhesion_note: ""
+    notes: "NK background lysis and allo-reactivity confound low-HLA-I lines."
+  Jurkat_NFAT:
+    abc50_multiplier: 1.6
+    hill_h: 1.8
+    heterogeneity_mode: dilute
+    donor_variability: none
+    synapse_competence: 0.6
+    has_inhibitory_receptors: false
+    checkpoint_inert: true
+    adhesion_inert: false
+    suspension: true
+    adhesion_note: ""
+    notes: "Parental NFAT reporter. Checkpoint is inert unless the PD-1 checkbox is on."
+  Jurkat_NFkB:
+    abc50_multiplier: 2.0
+    hill_h: 2.0
+    heterogeneity_mode: dilute
+    donor_variability: none
+    synapse_competence: 0.6
+    has_inhibitory_receptors: false
+    checkpoint_inert: true
+    adhesion_inert: false
+    suspension: true
+    adhesion_note: ""
+    notes: "NF-kB reporter. Checkpoint is inert unless the PD-1 checkbox is on."
+  HEK:
+    abc50_multiplier: 2.4
+    hill_h: 2.0
+    heterogeneity_mode: dilute
+    donor_variability: none
+    synapse_competence: 0.15
+    has_inhibitory_receptors: false
+    checkpoint_inert: true
+    adhesion_inert: true
+    suspension: false
+    adhesion_note: "HEK293에는 종양 세포 ICAM1/CD58에 대한 대응 수용체(LFA-1/CD2)가 거의 없습니다."
+    notes: "No adhesion assist. Highest antigen-density requirement."
+  Ramos:
+    abc50_multiplier: 1.8
+    hill_h: 1.9
+    heterogeneity_mode: dilute
+    donor_variability: none
+    synapse_competence: 0.7
+    has_inhibitory_receptors: false
+    checkpoint_inert: true
+    adhesion_inert: false
+    suspension: true
+    adhesion_note: ""
+    notes: "B cell with native CD40 and an LFA-1/CD2 pathway."

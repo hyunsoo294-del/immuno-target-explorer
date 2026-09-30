@@ -1,0 +1,44 @@
+# Weights within a factor sum to 1. The assembly test checks that.
+checkpoint:
+  CD274: 0.35
+  PDCD1LG2: 0.10
+  CD276: 0.12
+  VTCN1: 0.08
+  LGALS9: 0.10
+  PVR: 0.10
+  NECTIN2: 0.08
+  HLA-E: 0.07
+
+adhesion:
+  ICAM1: 0.35
+  CD58: 0.25
+  ICAM2: 0.05
+  ICAM3: 0.05
+  VCAM1: 0.05
+  ALCAM: 0.05
+  CD48: 0.06
+  SLAMF7: 0.07
+  NECTIN2: 0.07
+
+mucin_bulk:
+  - MUC1
+  - MUC4
+  - MUC16
+  - MUC20
+  - MUC13
+  - PODXL
+  - PODXL2
+  - SPN
+
+sialylation:
+  - ST6GAL1
+  - ST3GAL1
+  - ST3GAL4
+  - GCNT3
+  - B3GNT3
+  - GALNT1
+  - GALNT2
+  - GALNT3
+  - B4GALNT3
+  - CMAS
+  - SLC35A1
