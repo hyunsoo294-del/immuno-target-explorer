@@ -12,7 +12,6 @@ INERT_LABELS = {
     "F5_adhesion": "접촉",
 }
 STRING_COLUMNS = ("세포주", "암종", "체크포인트", "접근성", "신뢰도", "플래그", "예측 Emax")
-ZERO_VARIANCE_TIP = "이 결과 집합에서는 값이 거의 같아 순위에 쓰이지 않습니다."
 
 
 def render_results(result: pd.DataFrame, request: dict, inert_factors: list[str]) -> None:
@@ -56,12 +55,6 @@ def render_results(result: pd.DataFrame, request: dict, inert_factors: list[str]
             lambda value: "color: #9a6700" if isinstance(value, str) and "외삽" in value else "",
             subset=["예측 Emax"],
         )
-    tips = pd.DataFrame("", index=shown.index, columns=shown.columns)
-    for label in zero_labels:
-        tips[label] = ZERO_VARIANCE_TIP
-    for label in grey_labels:
-        tips[label] = "이 효과기에서는 이 요인을 점수에 넣지 않습니다."
-    styler = styler.set_tooltips(tips)
     reason_bits = []
     if grey_labels:
         reason = "이 효과기에서 정보가 없어 회색으로 둔 열: " + ", ".join(grey_labels)
