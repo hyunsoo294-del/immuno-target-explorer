@@ -57,7 +57,8 @@ def _fixture():
         "expression": expr,
         "models": models,
         "assay_duration_h": 24,
-        "abc50_base": configs["params"]["ABC50_base"],
+        "abc50_base": configs["params"]["f1_expression"]["abc50_base"],
+        "morphology": configs["morphology"],
         "hill_h_override": None,
         "jurkat_pd1": False,
         "taa_entry": configs["taa"]["TAAs"]["ERBB2"],
@@ -72,7 +73,9 @@ class WeightTests(unittest.TestCase):
         self.assertGreaterEqual(len(combinations), 6)
         for name, spec in combinations.items():
             total = sum(spec["weights"].values())
-            self.assertEqual(total, 100, name)
+            self.assertAlmostEqual(total, 100.0, places=2, msg=name)
+            self.assertNotIn("F1_expression", spec["weights"], name)
+            self.assertEqual(spec.get("f1_mode"), "gate", name)
 
     def test_gene_set_weights_sum_to_one(self):
         genes = _configs()["genes"]
@@ -110,7 +113,7 @@ class ScoreTests(unittest.TestCase):
         pbmc = score_models(models, "ERBB2", "CD3", "PBMC", cfg)
         hek = score_models(models, "ERBB2", "CD40", "HEK", cfg)
         self.assertTrue((hek["F4_checkpoint_tier"] == "not_applicable").all())
-        self.assertTrue((hek["F4_checkpoint"] == 100).all())
+        self.assertTrue(hek["F4_checkpoint"].isna().all())
         raw = pbmc.set_index("cell_line")["F5_adhesion"]
         scaled = hek.set_index("cell_line")["F5_adhesion"]
         competence = cfg["effectors"]["effectors"]["HEK"]["synapse_competence"]
@@ -131,6 +134,46 @@ class ScoreTests(unittest.TestCase):
         self.assertIn("SUSPENSION_PAIR", mid["flags"])
         self.assertIn("LOW_CONFIDENCE", mid["flags"])
         self.assertEqual(mid["confidence"], "LOW")
+
+
+class GateTests(unittest.TestCase):
+    def test_hill_gate_at_jurkat_nfkb_abc50(self):
+        abc50 = 60000.0
+        hill = 2.0
+
+        def s1(abc: float) -> float:
+            return 100.0 * abc**hill / (abc50**hill + abc**hill)
+
+        self.assertAlmostEqual(s1(150000), 86.2, places=1)
+        self.assertAlmostEqual(s1(500000), 98.6, places=1)
+        self.assertAlmostEqual(s1(900000), 99.6, places=1)
+        self.assertAlmostEqual(s1(15000), 5.9, places=1)
+
+    def test_her2_jurkat_refit_matches_measured_order(self):
+        from pathlib import Path
+
+        parquet = Path(__file__).resolve().parents[1] / "data" / "processed" / "expression_log2tpm.parquet"
+        if not parquet.exists():
+            self.skipTest("DepMap parquet is not in this checkout")
+        from immunoscore.src.data.abc import measured_abc_table
+        from immunoscore.src.genes import gene_identity
+        from immunoscore.src.scoring import build_cfg, score_models
+
+        measured_abc_table.cache_clear()
+        load_configs.cache_clear()
+        identity = gene_identity("HER2")
+        cfg = build_cfg({"taa_entry": identity["curated_entry"]})
+        names = ["Calu-3", "HCC1954", "NCI-N87", "MDA-MB-231"]
+        chosen = cfg["models"][cfg["models"]["CellLineName"].isin(names)]
+        result = score_models(chosen, identity["gene_symbol"], "4-1BB", "Jurkat_NFkB", cfg)
+        expected = {"Calu-3": 42.4, "HCC1954": 40.3, "NCI-N87": 37.9, "MDA-MB-231": 2.9}
+        got = {}
+        for name, score in expected.items():
+            value = round(float(result.loc[result["cell_line"] == name, "score"].iloc[0]), 1)
+            got[name] = value
+            self.assertEqual(value, score, name)
+        order = [name for name, _score in sorted(got.items(), key=lambda item: -item[1])]
+        self.assertEqual(order, ["Calu-3", "HCC1954", "NCI-N87", "MDA-MB-231"])
 
 
 if __name__ == "__main__":

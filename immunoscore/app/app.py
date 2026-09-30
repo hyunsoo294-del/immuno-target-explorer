@@ -46,9 +46,28 @@ def _weight_caption(arm: str, effector: str, jurkat_pd1: bool) -> str:
     order = configs["weights"]["factor_display_order"]
     labels = configs["weights"]["factor_labels"]
     readout = configs["weights"]["readout_labels"].get(spec["readout"], spec["readout"])
-    ranked = sorted(spec["weights"].items(), key=lambda item: (-item[1], order.index(item[0])))
+    ranked = sorted(spec["weights"].items(), key=lambda item: (-item[1], order.index(item[0]) if item[0] in order else 99))
     weights = " / ".join(f"{labels[factor]} {weight:g}" for factor, weight in ranked)
-    return f"{arm} × {effector} — {readout} readout · 가중치: {weights}"
+    fitted = str(spec.get("fitted_on") or "")
+    fit_tag = "미적합" if "not fitted" in fitted else "실측 적합"
+    return f"{arm} × {effector} — {readout} readout · 가중치: {weights} · × 발현게이트 · {fit_tag}"
+
+
+def _jurkat_notice(arm: str, effector: str, jurkat_pd1: bool) -> str:
+    if not str(effector).startswith("Jurkat"):
+        return ""
+    spec = load_configs()["weights"]["combinations"][combination_key(arm, effector, jurkat_pd1)]
+    fitted = str(spec.get("fitted_on") or "")
+    if "not fitted" in fitted:
+        return (
+            "이 Jurkat 조합은 실측으로 맞추지 않았습니다. 발현을 게이트로 바꾼 구조만 적용했습니다. "
+            "4-1BB Jurkat NF-κB에 맞춘 가중치를 여기로 옮기지 않았습니다."
+        )
+    return (
+        "이 가중치는 HER2 실측 4점으로 맞춘 작업 가설입니다. 검증된 모델이 아닙니다. "
+        "이 패널에서는 항원 밀도와 세포 형태가 반대로 놓여 있어, 높은 밀도가 Emax를 낮추는지와 "
+        "Calu-3의 접촉이 더 나은지를 구분할 수 없습니다."
+    )
 
 
 def _score(cfg: dict, models: pd.DataFrame, identity: dict, arm: str, effector: str, settings: dict) -> pd.DataFrame:
@@ -130,7 +149,11 @@ def render() -> None:
                 max_value=int(params["assay_duration_h_max"]),
                 value=int(params["assay_duration_h_default"]),
             )
-            abc50 = st.number_input("ABC50_base", min_value=1.0, value=float(params["ABC50_base"]))
+            abc50 = st.number_input(
+                "ABC50_base",
+                min_value=1.0,
+                value=float(params["f1_expression"]["abc50_base"]),
+            )
             hill_text = st.text_input("Hill h override", value="", help="비우면 효과기 YAML의 h를 씁니다.")
             jurkat_pd1 = st.checkbox("Jurkat PD-1 리포터", value=False)
     hill_override = None
@@ -212,6 +235,7 @@ def render() -> None:
             "abc50_base": abc50,
             "manifest": {key: manifest.get(key) for key in ("release", "release_id", "doi", "downloaded_at", "note")},
             "confidence_labels": params["confidence_labels"],
+            "jurkat_notice": _jurkat_notice(arm, effector, jurkat_pd1 and str(effector).startswith("Jurkat")),
         }
 
     result = st.session_state.get("result")

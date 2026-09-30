@@ -12,17 +12,27 @@ from immunoscore.src.config_loader import load_configs
 DISPLAY_COLUMNS = [
     ("cell_line", "세포주"),
     ("cancer", "암종"),
-    ("F1_expression", "발현"),
+    ("F1_expression", "발현(게이트)"),
     ("F2_heterogeneity", "균일성"),
     ("F3_internalization", "내재화"),
     ("F4_checkpoint", "체크포인트"),
     ("F5_adhesion", "접촉"),
+    ("accessibility_label", "접근성"),
     ("F6_glycocalyx", "당질층"),
     ("F7_epitope_proximity", "에피톱"),
     ("score", "점수"),
     ("confidence", "신뢰도"),
     ("flag_text", "플래그"),
 ]
+
+
+def _access_label(row: pd.Series) -> str:
+    labels = load_configs()["params"].get("accessibility_source_labels") or {}
+    value = row.get("accessibility")
+    source = labels.get(row.get("f5_accessibility_source"), row.get("f5_accessibility_source") or "")
+    if pd.isna(value):
+        return ""
+    return f"{float(value):.2f} {source}".strip()
 
 
 def display_frame(result: pd.DataFrame) -> pd.DataFrame:
@@ -33,6 +43,16 @@ def display_frame(result: pd.DataFrame) -> pd.DataFrame:
             frame[label] = result[source].map(lambda value: labels.get(value, value))
         elif source in ("cell_line", "cancer", "flag_text"):
             frame[label] = result[source]
+        elif source == "accessibility_label":
+            frame[label] = result.apply(_access_label, axis=1)
+        elif source == "F4_checkpoint":
+            shown = []
+            for _idx, row in result.iterrows():
+                if row.get("F4_checkpoint_tier") == "not_applicable" or pd.isna(row.get(source)):
+                    shown.append("—")
+                else:
+                    shown.append(round(float(row[source]), 1))
+            frame[label] = shown
         else:
             frame[label] = pd.to_numeric(result[source], errors="coerce").round(1)
     return frame

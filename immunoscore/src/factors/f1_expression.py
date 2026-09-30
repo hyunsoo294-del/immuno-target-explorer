@@ -1,14 +1,20 @@
-"""F1 TAA expression.
+"""F1 TAA expression, used as a multiplicative gate.
 
-Biological claim: at saturating antibody, Emax rises with surface antigen density
-and then saturates. A Hill function is the claim, not a straight line through TPM.
+Biological claim: in a fixed effector-to-target reporter assay the signal ceiling
+is set by how many effector cells form a productive conjugate. Antigen density is
+a threshold. Below it there is no signal. Above it, density neither raises nor
+lowers the score. This is deliberate. In the 2026-09 HER2 panel, density and
+contact morphology run in opposite directions, so a descending or bell-shaped F1
+would just memorize that panel. Antigen depletion is not the explanation: even
+the highest expressor presents about 0.4 nM of sites at typical plating density,
+two orders below the top of the dose-response.
 
-Data behind it: DepMap log2(TPM+1) passed through an unvalidated global RNA-to-ABC
-curve, times a curated surface fraction when one exists. A measured ABC overrides
-the curve when data/curated/measured_abc.csv has a row.
+Data behind it: approximate ABC for five HER2 lines in measured_abc.csv, otherwise
+DepMap log2(TPM+1) through an unvalidated RNA-to-ABC curve. ABC50_base is 30000,
+then multiplied by the effector's abc50_multiplier.
 
-Limitation: RNA-to-surface correlation is modest. This tier is rna_only and must
-not be read as a molecule count. Heuristic for panel selection, not a predictor.
+Limitation: RNA ABC is not a molecule count. The five panel ABCs are approximate,
+not a QIFIKIT fit. Heuristic for panel selection, not a validated predictor.
 """
 
 from __future__ import annotations
@@ -34,7 +40,8 @@ def score(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cfg: dict
         or params["abc_rna_fallback"]["default_surface_fraction"]
     )
     estimated = estimate_surface_abc(taa, log_values, surface_fraction).set_index("ModelID")
-    abc50_base = float(cfg.get("abc50_base") or params["ABC50_base"])
+    f1_params = params.get("f1_expression") or {}
+    abc50_base = float(cfg.get("abc50_base") or f1_params.get("abc50_base"))
     abc50 = abc50_base * float(effectors["abc50_multiplier"])
     hill = cfg.get("hill_h_override")
     hill_h = float(effectors["hill_h"] if hill in (None, "") else hill)

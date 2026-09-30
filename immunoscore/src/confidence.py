@@ -5,6 +5,17 @@ from __future__ import annotations
 import pandas as pd
 
 
+def cap_confidence(label: str, accessibility_source: str, params: dict) -> str:
+    """Unlisted morphology cannot support HIGH. Curated lines keep their label."""
+    if accessibility_source == "curated":
+        return label
+    cap = str((params.get("confidence") or {}).get("non_curated_accessibility_cap") or "MEDIUM")
+    rank = {"LOW": 0, "MEDIUM": 1, "HIGH": 2}
+    if rank.get(label, 0) > rank.get(cap, 1):
+        return cap
+    return label
+
+
 def row_confidence(completeness: float, f1_tier: str, params: dict) -> str:
     spec = params["confidence"]
     if f1_tier == "rna_only":

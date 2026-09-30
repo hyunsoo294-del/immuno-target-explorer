@@ -1,0 +1,24 @@
+# accessibility: 0-1, fraction of target surface reachable by an effector cell.
+# Hand-entered, unvalidated. Morphology depends on medium, passage and confluency.
+# CDH1 RNA cannot tell a tight monolayer from a dense clump, so this is not inferred.
+patterns:
+  monolayer_flat:     {accessibility: 1.00, desc: "평평한 confluent 단층, 중첩 없음"}
+  monolayer_mixed:    {accessibility: 0.80, desc: "단층이나 부분적 다층/중첩"}
+  scattered_spindle:  {accessibility: 0.90, desc: "산개, 세포당 노출면 큼"}
+  adherent_clumped:   {accessibility: 0.60, desc: "섬 형태로 뭉침, 내부 세포 가려짐"}
+  suspension_single:  {accessibility: 0.70, desc: "단일 부유"}
+  suspension_clumped: {accessibility: 0.45, desc: "부유 응집"}
+
+cell_lines:
+  Calu-3:      {pattern: monolayer_flat,    accessibility: 1.00, source: estimated}
+  HCC1954:     {pattern: monolayer_mixed,   accessibility: 0.80, source: estimated}
+  NCI-N87:     {pattern: adherent_clumped,  accessibility: 0.60, source: estimated}
+  SK-BR-3:     {pattern: adherent_clumped,  accessibility: 0.55, source: estimated}
+  MDA-MB-231:  {pattern: scattered_spindle, accessibility: 0.90, source: estimated}
+
+default:
+  # unlisted lines fall back to GrowthPattern from DepMap Model.csv
+  Adherent:  0.80
+  Suspension: 0.65
+  Mixed:     0.72
+  Unknown:   0.75

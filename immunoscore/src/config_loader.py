@@ -27,6 +27,7 @@ def load_configs() -> dict:
         "genes": load_yaml(CONFIG_DIR / "gene_sets.yaml"),
         "mucins": load_yaml(DATA_DIR / "reference" / "mucins.yaml"),
         "taa": load_yaml(DATA_DIR / "curated" / "taa_properties.yaml"),
+        "morphology": load_yaml(DATA_DIR / "curated" / "morphology.yaml"),
         "depmap_sources": load_yaml(CONFIG_DIR / "depmap_sources.yaml"),
     }
 

@@ -1,5 +1,4 @@
 # Every threshold the scorer uses. Refit by editing this file, not the Python.
-ABC50_base: 8000
 assay_duration_h_default: 24
 assay_duration_h_min: 6
 assay_duration_h_max: 36
@@ -13,6 +12,18 @@ abc_rna_fallback:
   # lands near 1e6 ABC, the order of magnitude reported for HER2 on SK-BR-3.
   molecules_per_tpm: 800
   default_surface_fraction: 0.5
+
+f1_expression:
+  mode: gate                 # multiplicative gate, not an additive weighted term
+  abc50_base: 30000
+  hill_h: 2.0
+  gate_exponent: 1.0         # gamma; do not exceed 2.0 without new data
+  note: >
+    F1 multiplies the weighted sum of F2-F7. Antigen density is necessary but not
+    sufficient. Above threshold the Hill function plateaus, so density neither
+    rewards nor penalizes. A descending or bell-shaped F1 is intentionally not used:
+    in the 2026-09 HER2 panel, density and contact morphology are inversely aligned,
+    and those two explanations cannot be separated.
 
 internalization_rate_score:
   slow: 90
@@ -69,9 +80,12 @@ confidence:
   medium_min_completeness: 0.6
   # RNA-only surface ABC cannot support a higher label.
   rna_only_f1_caps_at: LOW
+  # Hand-entered morphology is the only accessibility source allowed to stay at HIGH.
+  non_curated_accessibility_cap: MEDIUM
 
 gates:
-  antigen_low_s1: 25
+  below_antigen_threshold_s1: 30
+  low_accessibility: 0.65
   high_heterogeneity_pos_frac: 0.6
   mucin_high_s6: 30
   low_confidence_completeness: 0.6
@@ -83,8 +97,16 @@ confidence_labels:
   MEDIUM: 중
   LOW: 낮음
 
+accessibility_source_labels:
+  curated: 기록
+  growthpattern_default: 성장패턴
+  default: 기본
+
 flag_labels:
-  ANTIGEN_LOW: 항원낮음
+  BELOW_ANTIGEN_THRESHOLD: 항원역치미달
+  LOW_ACCESSIBILITY: 접근성낮음
+  ACCESSIBILITY_ESTIMATED: 형태추정
+  ZERO_VARIANCE_FACTOR: 무변별인자
   HIGH_HETEROGENEITY: 불균일
   MUCIN_HIGH: 당질층높음
   JAK_LOSS: JAK소실

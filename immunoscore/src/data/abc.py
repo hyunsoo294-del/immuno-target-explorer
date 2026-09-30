@@ -42,15 +42,23 @@ def estimate_surface_abc(gene: str, log2_values: pd.Series, surface_fraction: fl
     gene_measured = measured[measured["gene_symbol"] == gene] if not measured.empty else measured
     measured_map = {}
     if gene_measured is not None and not gene_measured.empty:
-        measured_map = dict(zip(gene_measured["ModelID"], gene_measured["abc"]))
+        for record in gene_measured.itertuples(index=False):
+            tier = getattr(record, "evidence_tier", "protein_measured")
+            detail = getattr(record, "source_detail", "measured_abc.csv")
+            if tier is None or (isinstance(tier, float) and pd.isna(tier)) or str(tier) == "nan":
+                tier = "protein_measured"
+            if detail is None or (isinstance(detail, float) and pd.isna(detail)) or str(detail) == "nan":
+                detail = "measured_abc.csv"
+            measured_map[str(record.ModelID)] = (float(record.abc), str(tier), str(detail))
     for model_id, log_value in log2_values.items():
-        if model_id in measured_map and pd.notna(measured_map[model_id]):
+        if model_id in measured_map and pd.notna(measured_map[model_id][0]):
+            abc, tier, detail = measured_map[model_id]
             rows.append(
                 {
                     "ModelID": model_id,
-                    "abc": float(measured_map[model_id]),
-                    "evidence_tier": "protein_measured",
-                    "source_detail": "measured_abc.csv",
+                    "abc": abc,
+                    "evidence_tier": tier,
+                    "source_detail": detail,
                 }
             )
             continue

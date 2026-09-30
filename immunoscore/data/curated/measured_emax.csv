@@ -1,0 +1,6 @@
+taa,cell_line,arm,effector,emax_value,emax_unit,readout,normalization,n_replicates,date,notes
+HER2,Calu-3,4-1BB,Jurkat_NFkB,25000,RLU,dose_response_fitted_emax,raw,,2026-09,
+HER2,HCC1954,4-1BB,Jurkat_NFkB,15000,RLU,dose_response_fitted_emax,raw,,2026-09,
+HER2,NCI-N87,4-1BB,Jurkat_NFkB,8000,RLU,dose_response_fitted_emax,raw,,2026-09,
+HER2,SK-BR-3,4-1BB,Jurkat_NFkB,7000,RLU,dose_response_fitted_emax,raw,,2026-09,
+HER2,MDA-MB-231,4-1BB,Jurkat_NFkB,900,RLU,dose_response_fitted_emax,raw,,2026-09,

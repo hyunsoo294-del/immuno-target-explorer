@@ -29,6 +29,10 @@ def render_results(result: pd.DataFrame, request: dict, inert_factors: list[str]
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )
     st.caption("예비 패널 선택용 휴리스틱입니다. 검증된 Emax 예측기가 아닙니다. 각 행은 그 세포주 하나의 점수입니다.")
+    notice = request.get("jurkat_notice") or ""
+    if notice:
+        st.markdown(notice)
+    st.caption("발현(게이트)는 가산 점수가 아닙니다. 100은 ×1.00, 50은 ×0.50입니다. 점수는 그 배수를 F2–F7 가중 합에 곱한 값입니다.")
     shown = display_frame(result)
     grey_labels = [INERT_LABELS[factor] for factor in inert_factors if factor in INERT_LABELS]
     styler = shown.style
@@ -38,10 +42,11 @@ def render_results(result: pd.DataFrame, request: dict, inert_factors: list[str]
         if "F5_adhesion" in inert_factors:
             reason += ". HEK293에는 종양 세포 ICAM1/CD58의 대응 수용체가 없습니다."
         if "F4_checkpoint" in inert_factors:
-            reason += " 억제 수용체가 없는 효과기라 체크포인트는 100으로 두고 점수에 거의 반영하지 않습니다."
+            reason += " 억제 수용체가 없는 효과기라 체크포인트는 — 이고 가중치는 0입니다."
         st.caption(reason)
+    numeric = [column for column in shown.columns if column not in ("세포주", "암종", "체크포인트", "접근성", "신뢰도", "플래그")]
+    styler = styler.format(precision=1, subset=numeric, na_rep="")
     styler = styler.background_gradient(subset=["점수"], cmap="YlGn", vmin=0, vmax=100)
-    styler = styler.format(precision=1, na_rep="")
     st.dataframe(styler, use_container_width=True, hide_index=True, height=460)
     picked = st.selectbox(
         "행을 고르면 근거가 열립니다",
@@ -56,10 +61,22 @@ def render_results(result: pd.DataFrame, request: dict, inert_factors: list[str]
             f" · 데이터 완전도 {detail['data_completeness']:.2f}"
             f" · 플래그 {detail['flag_text'] or '없음'}"
         )
+        gate = detail["F1_expression"]
+        gate_text = "" if pd.isna(gate) else f"×{float(gate) / 100:.2f}"
+        st.markdown(f"발현(게이트) · {gate_text} · {'' if pd.isna(gate) else f'{float(gate):.1f}'}")
+        st.caption(str(detail["F1_expression_detail"]))
+        access = detail.get("accessibility")
+        access_text = "" if pd.isna(access) else f"{float(access):.2f}"
+        st.markdown(f"접근성 · {access_text} · {detail.get('f5_accessibility_source')}")
         for source, label in DISPLAY_COLUMNS:
-            if not str(source).startswith("F"):
+            if not str(source).startswith("F") or source == "F1_expression":
                 continue
             value = detail[source]
-            text = "" if pd.isna(value) else f"{float(value):.1f}"
+            if detail.get(source + "_tier") == "not_applicable" or pd.isna(value):
+                text = "—"
+            else:
+                text = f"{float(value):.1f}"
             st.markdown(f"{label} ({source}) · {text} · {detail[source + '_tier']}")
             st.caption(str(detail[source + "_detail"]))
+        if detail.get("zero_variance_factors"):
+            st.caption("결과 집합에서 값이 같은 요인: " + str(detail["zero_variance_factors"]))

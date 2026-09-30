@@ -7,7 +7,9 @@ Data behind it: DepMap log2(TPM+1) z-scores, gene weights in gene_sets.yaml, the
 cohort percentile rank. synapse_competence is applied in scoring.py, not here.
 
 Limitation: RNA is not surface ICAM1 density, and HEK293 has almost no counter-receptor.
-The competence scaler is a judgment, not a measured binding constant.
+The competence scaler is a judgment, not a measured binding constant. Culture accessibility
+is a separate hand-entered multiplier (morphology.yaml). CDH1 RNA cannot tell a flat
+monolayer from a dense clump, so that multiplier is not computed from expression.
 Heuristic for panel selection, not a predictor.
 """
 

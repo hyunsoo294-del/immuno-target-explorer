@@ -1,7 +1,14 @@
 """Assemble factor scores, apply effector gating, and attach flags.
 
-Gating lives here so factor modules stay pure. Missing factors are NaN and their
-weights are renormalized. A missing value is not a zero.
+F1 is a gate. It multiplies the weighted sum of the other factors and does not
+add a constant. A factor the effector gates off has weight 0 and is left out of
+the sum. Missing factors are NaN, never 0, and the remaining weights are
+renormalized.
+
+In a fixed effector-to-target reporter the ceiling is the fraction of effector
+cells that form a productive conjugate. Density is a threshold. Above that
+threshold this model does not reward or penalize density, because the 2026-09
+HER2 panel cannot separate a density effect from contact morphology.
 
 This is a panel-selection heuristic, not a validated predictor of assay Emax.
 """
@@ -11,8 +18,9 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from immunoscore.src.confidence import completeness, row_confidence
+from immunoscore.src.confidence import cap_confidence, completeness, row_confidence
 from immunoscore.src.config_loader import combination_key
+from immunoscore.src.data.morphology import lookup_accessibility
 from immunoscore.src.factors import FACTORS
 
 
@@ -20,8 +28,17 @@ def _as_bool(value) -> bool:
     return bool(value) and value is not False
 
 
-def apply_effector_gating(parts: dict[str, pd.DataFrame], effector: str, cfg: dict) -> list[str]:
-    """Mutate F4 and F5 frames. Return factor ids that are inert for this effector."""
+def apply_effector_gating(
+    parts: dict[str, pd.DataFrame],
+    effector: str,
+    cfg: dict,
+    cell_lines: pd.DataFrame,
+) -> list[str]:
+    """Mutate F4 and F5 frames. Return factor ids that are inert for this effector.
+
+    A gated checkpoint is NaN with weight 0, not a constant 100. Adhesion is the
+    cohort rank times synapse competence times culture accessibility.
+    """
     eff = cfg["effectors"]["effectors"][effector]
     inert = []
     jurkat_pd1 = bool(cfg.get("jurkat_pd1"))
@@ -30,22 +47,44 @@ def apply_effector_gating(parts: dict[str, pd.DataFrame], effector: str, cfg: di
     )
     f4 = parts["F4_checkpoint"]
     if checkpoint_inert:
-        f4["sub_score"] = 100.0
+        f4["sub_score"] = np.nan
         f4["evidence_tier"] = "not_applicable"
         f4["source_detail"] = (
-            "이 효과기는 억제 수용체가 없어 체크포인트 항을 쓰지 않습니다. "
-            "생물학적 burden은 점수에 넣지 않았습니다."
+            "이 효과기는 억제 수용체가 없어 체크포인트 가중치가 0입니다. "
+            "상수 100을 더하지 않습니다."
         )
         inert.append("F4_checkpoint")
     f5 = parts["F5_adhesion"]
     competence = float(eff["synapse_competence"])
     raw = pd.to_numeric(f5["sub_score"], errors="coerce")
-    f5["sub_score"] = raw * competence
+    morphology = cfg.get("morphology") or {}
+    names = cell_lines.copy()
+    names["ModelID"] = names["ModelID"].astype(str)
+    names = names.drop_duplicates("ModelID").set_index("ModelID")
+    access_values = []
+    access_sources = []
+    for model_id in f5.index:
+        if model_id in names.index:
+            meta = names.loc[model_id]
+            if isinstance(meta, pd.DataFrame):
+                meta = meta.iloc[0]
+            cell_name = meta.get("CellLineName") or ""
+            stripped = meta.get("StrippedCellLineName") or ""
+            growth = meta.get("GrowthPattern") or ""
+        else:
+            cell_name, stripped, growth = "", "", ""
+        value, source = lookup_accessibility(str(cell_name), str(stripped), str(growth), morphology)
+        access_values.append(value)
+        access_sources.append(source)
+    f5["accessibility"] = access_values
+    f5["f5_accessibility_source"] = access_sources
+    f5["sub_score"] = raw.to_numpy() * competence * np.asarray(access_values, dtype=float)
     note = str(eff.get("adhesion_note") or "")
-    f5["source_detail"] = (
-        f5["source_detail"].astype(str) + f"; synapse_competence={competence:.2f}"
-        + (f"; {note}" if note else "")
-    )
+    f5["source_detail"] = [
+        f"{detail}; synapse_competence={competence:.2f}; accessibility={value:.2f}; "
+        f"f5_accessibility_source={source}" + (f"; {note}" if note else "")
+        for detail, value, source in zip(f5["source_detail"].astype(str), access_values, access_sources)
+    ]
     if _as_bool(eff.get("adhesion_inert")):
         inert.append("F5_adhesion")
     return inert
@@ -67,8 +106,13 @@ def _flags_for_row(
     gates = params["gates"]
     flags = []
     s1 = row.get("F1_expression")
-    if pd.notna(s1) and float(s1) < float(gates["antigen_low_s1"]):
-        flags.append("ANTIGEN_LOW")
+    if pd.notna(s1) and float(s1) < float(gates["below_antigen_threshold_s1"]):
+        flags.append("BELOW_ANTIGEN_THRESHOLD")
+    access = row.get("accessibility")
+    if pd.notna(access) and float(access) < float(gates["low_accessibility"]):
+        flags.append("LOW_ACCESSIBILITY")
+    if row.get("f5_accessibility_source") not in (None, "curated"):
+        flags.append("ACCESSIBILITY_ESTIMATED")
     if row.get("f2_source") not in (None, "default") and pd.notna(row.get("pos_frac")):
         if float(row["pos_frac"]) < float(gates["high_heterogeneity_pos_frac"]):
             flags.append("HIGH_HETEROGENEITY")
@@ -103,9 +147,10 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
     for factor_id, function in FACTORS:
         part = function(lines, taa, arm, effector, cfg).set_index("ModelID")
         parts[factor_id] = part
-    inert = apply_effector_gating(parts, effector, cfg)
+    inert = apply_effector_gating(parts, effector, cfg, lines)
     key = combination_key(arm, effector, bool(cfg.get("jurkat_pd1")))
     weights = dict(cfg["weights"]["combinations"][key]["weights"])
+    gate_exponent = float((cfg["params"].get("f1_expression") or {}).get("gate_exponent") or 1.0)
     expr = cfg["expression"]
     taa_series = expr[taa] if taa in expr.columns else pd.Series(dtype=float)
     hla_genes = [gene for gene in cfg["params"]["hla_genes"] if gene in expr.columns]
@@ -132,13 +177,28 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
             scores[factor_id] = record["sub_score"]
             tiers[factor_id] = record["evidence_tier"]
             details[factor_id] = record["source_detail"]
-        available = {factor: weight for factor, weight in weights.items() if pd.notna(scores.get(factor))}
+        s1 = scores.get("F1_expression")
+        if pd.isna(s1):
+            gate = np.nan
+        else:
+            gate = (float(s1) / 100.0) ** gate_exponent
+        available = {
+            factor: float(weight)
+            for factor, weight in weights.items()
+            if factor != "F1_expression" and float(weight) > 0 and pd.notna(scores.get(factor))
+        }
         weight_sum = float(sum(available.values()))
-        if weight_sum <= 0:
+        if weight_sum <= 0 or pd.isna(gate):
             total = np.nan
         else:
-            total = sum(float(scores[factor]) * float(weight) / weight_sum for factor, weight in available.items())
-        done = completeness(weights, tiers, scores, cfg["params"])
+            base = sum(float(scores[factor]) * weight / weight_sum for factor, weight in available.items())
+            total = float(gate) * base
+        done = completeness(
+            {factor: weight for factor, weight in weights.items() if factor != "F1_expression" and float(weight) > 0},
+            tiers,
+            scores,
+            cfg["params"],
+        )
         f2 = parts["F2_heterogeneity"]
         f2_source = "default"
         pos_frac = np.nan
@@ -148,6 +208,15 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
                 record = record.iloc[0]
             f2_source = record.get("f2_source", "default")
             pos_frac = record.get("pos_frac", np.nan)
+        f5 = parts["F5_adhesion"]
+        accessibility = np.nan
+        access_source = "default"
+        if model_id in f5.index:
+            f5_record = f5.loc[model_id]
+            if isinstance(f5_record, pd.DataFrame):
+                f5_record = f5_record.iloc[0]
+            accessibility = f5_record.get("accessibility", np.nan)
+            access_source = f5_record.get("f5_accessibility_source", "default")
         taa_log = taa_series.get(model_id, np.nan) if len(taa_series) else np.nan
         hla_low = False
         if hla_genes:
@@ -171,8 +240,14 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
             "growth": meta.get("GrowthPattern") or "",
             "score": total,
             "data_completeness": done,
-            "confidence": row_confidence(done, str(tiers.get("F1_expression")), cfg["params"]),
+            "confidence": cap_confidence(
+                row_confidence(done, str(tiers.get("F1_expression")), cfg["params"]),
+                access_source,
+                cfg["params"],
+            ),
             "combination": key,
+            "accessibility": accessibility,
+            "f5_accessibility_source": access_source,
             "f2_source": f2_source,
             "pos_frac": pos_frac,
             "taa_log2tpm": taa_log,
@@ -183,6 +258,8 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
             row[factor_id + "_tier"] = tiers[factor_id]
             row[factor_id + "_detail"] = details[factor_id]
         row["jak_loss"] = False
+        row["accessibility"] = accessibility
+        row["f5_accessibility_source"] = access_source
         flags = _flags_for_row(
             pd.Series(row),
             effector=effector,
@@ -199,8 +276,37 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
         row["flag_text"] = " ".join(labels.get(flag, flag) for flag in flags)
         rows.append(row)
     result = pd.DataFrame(rows)
+    result = _flag_zero_variance(result, weights, cfg["params"])
     result = result.sort_values(["score", "taa_log2tpm"], ascending=[False, False], na_position="last")
     return result.reset_index(drop=True)
+
+
+def _flag_zero_variance(result: pd.DataFrame, weights: dict, params: dict) -> pd.DataFrame:
+    """A constant factor cannot rank lines. Keep it in the score and say so."""
+    if len(result) < 2:
+        result["zero_variance_factors"] = ""
+        return result
+    constant = []
+    for factor, weight in weights.items():
+        if factor == "F1_expression" or float(weight) <= 0 or factor not in result.columns:
+            continue
+        series = pd.to_numeric(result[factor], errors="coerce").dropna()
+        if len(series) >= 2 and int(series.nunique()) <= 1:
+            constant.append(factor)
+    result["zero_variance_factors"] = ",".join(constant)
+    if not constant:
+        return result
+    labels = params["flag_labels"]
+
+    def _add(flags):
+        items = list(flags or [])
+        if "ZERO_VARIANCE_FACTOR" not in items:
+            items.append("ZERO_VARIANCE_FACTOR")
+        return items
+
+    result["flags"] = result["flags"].map(_add)
+    result["flag_text"] = result["flags"].map(lambda items: " ".join(labels.get(flag, flag) for flag in items))
+    return result
 
 
 def _ramos_expresses(taa: str, expr: pd.DataFrame, lines: pd.DataFrame, cfg: dict) -> bool:
@@ -245,7 +351,8 @@ def build_cfg(overrides: dict | None = None) -> dict:
         "models": models,
         "manifest": manifest(),
         "assay_duration_h": configs["params"]["assay_duration_h_default"],
-        "abc50_base": configs["params"]["ABC50_base"],
+        "abc50_base": configs["params"]["f1_expression"]["abc50_base"],
+        "morphology": configs["morphology"],
         "hill_h_override": None,
         "jurkat_pd1": False,
         "taa_entry": {},
