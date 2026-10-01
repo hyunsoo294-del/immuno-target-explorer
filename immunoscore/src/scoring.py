@@ -1,9 +1,12 @@
 """Assemble factor scores, apply effector gating, and attach flags.
 
-F1 is a gate. It multiplies the weighted sum of the other factors and does not
-add a constant. A factor the effector gates off has weight 0 and is left out of
-the sum. A factor with no variance across the result set is also left out, and
-the remaining weights are renormalized to 100. Missing factors are NaN, never 0.
+F1 and F7 are gates. Each multiplies the weighted sum of the remaining factors
+and does not add a constant. F7 is a geometric constraint on synapse formation,
+the same class of quantity as accessibility. Its exponent is fixed in
+scoring_params.yaml and is not tuned. A factor the effector gates off has
+weight 0 and is left out of the sum. A factor with no variance across the
+result set is also left out, and the remaining weights are renormalized to 100.
+Missing factors are NaN, never 0.
 
 In a fixed effector-to-target reporter the ceiling is the fraction of effector
 cells that form a productive conjugate. Density is a threshold. Above that
@@ -154,12 +157,37 @@ def format_flag_text(flags: list[str], labels: dict, zero_names: list[str] | Non
     return " ".join(parts)
 
 
-def _low_variance_factors(parts: dict, model_ids: pd.Series, weights: dict, variance_eps: float) -> list[str]:
+def _gated_factor_ids(params: dict) -> set[str]:
+    """Factors that multiply the sum. F7 joins F1 only when YAML says so."""
+    gated = {"F1_expression"}
+    spec = params.get("f7_epitope_proximity") or {}
+    if str(spec.get("mode") or "") == "gate":
+        gated.add("F7_epitope_proximity")
+    return gated
+
+
+def _f7_gate_exponent(params: dict) -> float | None:
+    spec = params.get("f7_epitope_proximity") or {}
+    if str(spec.get("mode") or "") != "gate":
+        return None
+    if "gate_exponent" not in spec:
+        raise KeyError("f7_epitope_proximity.gate_exponent is required when mode is gate")
+    return float(spec["gate_exponent"])
+
+
+def _low_variance_factors(
+    parts: dict,
+    model_ids: pd.Series,
+    weights: dict,
+    variance_eps: float,
+    skip: set[str] | None = None,
+) -> list[str]:
     """Factors whose sub-score SD is below variance_eps. n < 2 does not drop."""
     ids = pd.Index(pd.Series(model_ids).astype(str))
     excluded = []
+    gated = skip or set()
     for factor, weight in weights.items():
-        if factor == "F1_expression" or float(weight) <= 0 or factor not in parts:
+        if factor in gated or float(weight) <= 0 or factor not in parts:
             continue
         series = pd.to_numeric(parts[factor]["sub_score"], errors="coerce").reindex(ids)
         spread = series.std(ddof=1, skipna=True)
@@ -168,12 +196,13 @@ def _low_variance_factors(parts: dict, model_ids: pd.Series, weights: dict, vari
     return excluded
 
 
-def _renormalized_weights(weights: dict, excluded: list[str]) -> dict[str, float]:
-    """Drop excluded factors and scale the rest so they sum to 100."""
+def _renormalized_weights(weights: dict, excluded: list[str], skip: set[str] | None = None) -> dict[str, float]:
+    """Drop gated and excluded factors and scale the rest so they sum to 100."""
+    gated = skip or {"F1_expression"}
     kept = {
         factor: float(weight)
         for factor, weight in weights.items()
-        if factor != "F1_expression" and float(weight) > 0 and factor not in excluded
+        if factor not in gated and float(weight) > 0 and factor not in excluded
     }
     total = float(sum(kept.values()))
     if total <= 0:
@@ -194,11 +223,13 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
     key = combination_key(arm, effector, bool(cfg.get("jurkat_pd1")))
     weights = dict(cfg["weights"]["combinations"][key]["weights"])
     variance_eps = float(cfg["params"]["variance_eps"])
-    excluded = _low_variance_factors(parts, lines["ModelID"], weights, variance_eps)
-    effective = _renormalized_weights(weights, excluded)
+    gated = _gated_factor_ids(cfg["params"])
+    excluded = _low_variance_factors(parts, lines["ModelID"], weights, variance_eps, gated)
+    effective = _renormalized_weights(weights, excluded, gated)
     factor_labels = cfg["weights"].get("factor_labels") or {}
     zero_names = [factor_labels.get(factor, factor) for factor in excluded]
     gate_exponent = float((cfg["params"].get("f1_expression") or {}).get("gate_exponent") or 1.0)
+    f7_exponent = _f7_gate_exponent(cfg["params"])
     expr = cfg["expression"]
     taa_series = expr[taa] if taa in expr.columns else pd.Series(dtype=float)
     hla_genes = [gene for gene in cfg["params"]["hla_genes"] if gene in expr.columns]
@@ -230,17 +261,25 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
             gate = np.nan
         else:
             gate = (float(s1) / 100.0) ** gate_exponent
+        if f7_exponent is None:
+            epitope_gate = 1.0
+        else:
+            s7 = scores.get("F7_epitope_proximity")
+            if pd.isna(s7):
+                epitope_gate = np.nan
+            else:
+                epitope_gate = (float(s7) / 100.0) ** f7_exponent
         available = {
             factor: float(weight)
             for factor, weight in effective.items()
             if pd.notna(scores.get(factor))
         }
         weight_sum = float(sum(available.values()))
-        if weight_sum <= 0 or pd.isna(gate):
+        if weight_sum <= 0 or pd.isna(gate) or pd.isna(epitope_gate):
             total = np.nan
         else:
             base = sum(float(scores[factor]) * weight / weight_sum for factor, weight in available.items())
-            total = float(gate) * base
+            total = float(gate) * float(epitope_gate) * base
         done = completeness(
             {factor: weight for factor, weight in weights.items() if factor != "F1_expression" and float(weight) > 0},
             tiers,
@@ -323,6 +362,12 @@ def score_models(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cf
         )
         if excluded:
             flags.append("ZERO_VARIANCE_FACTOR")
+        for extra in cfg.get("resolution_flags") or []:
+            if extra and extra not in flags:
+                flags.append(extra)
+        override = cfg.get("confidence_override")
+        if override:
+            row["confidence"] = str(override)
         labels = cfg["params"]["flag_labels"]
         row["flags"] = flags
         row["flag_text"] = format_flag_text(flags, labels, zero_names)

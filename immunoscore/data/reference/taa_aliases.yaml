@@ -1,0 +1,53 @@
+aliases:
+  # --- protein targets: alias resolves to one gene ---
+  PSMA:          {symbol: FOLH1,    antigen_class: protein,
+                  note: "Do NOT confuse with PSMA1-8 (proteasome 20S alpha subunits)."}
+  HER2:          {symbol: ERBB2,    antigen_class: protein}
+  HER3:          {symbol: ERBB3,    antigen_class: protein}
+  TROP2:         {symbol: TACSTD2,  antigen_class: protein}
+  CEA:           {symbol: CEACAM5,  antigen_class: protein}
+  BCMA:          {symbol: TNFRSF17, antigen_class: protein}
+  B7-H3:         {symbol: CD276,    antigen_class: protein}
+  PD-L1:         {symbol: CD274,    antigen_class: protein}
+  CD20:          {symbol: MS4A1,    antigen_class: protein}
+  FRalpha:       {symbol: FOLR1,    antigen_class: protein}
+  5T4:           {symbol: TPBG,     antigen_class: protein}
+  Nectin-4:      {symbol: NECTIN4,  antigen_class: protein}
+  LIV-1:         {symbol: SLC39A6,  antigen_class: protein}
+  CA125:         {symbol: MUC16,    antigen_class: protein}
+  Tissue-Factor: {symbol: F3,       antigen_class: protein}
+  STEAP1:        {symbol: STEAP1,   antigen_class: protein}
+  PSCA:          {symbol: PSCA,     antigen_class: protein}
+  DLL3:          {symbol: DLL3,     antigen_class: protein}
+  MSLN:          {symbol: MSLN,     antigen_class: protein}
+  GPC3:          {symbol: GPC3,     antigen_class: protein}
+  ROR1:          {symbol: ROR1,     antigen_class: protein}
+
+  # Aliases already accepted before this table. Whole tokens only.
+  HER-2:         {symbol: ERBB2,    antigen_class: protein}
+  NEU:           {symbol: ERBB2,    antigen_class: protein}
+  TROP-2:        {symbol: TACSTD2,  antigen_class: protein}
+  PDL1:          {symbol: CD274,    antigen_class: protein}
+  B7-H1:         {symbol: CD274,    antigen_class: protein}
+  B7H1:          {symbol: CD274,    antigen_class: protein}
+  PD-L2:         {symbol: PDCD1LG2, antigen_class: protein}
+  CD326:         {symbol: EPCAM,    antigen_class: protein}
+  MESOTHELIN:    {symbol: MSLN,     antigen_class: protein}
+
+  # --- splice / sequence variants: gene-level TPM CANNOT distinguish the variant ---
+  CLDN18.2:      {symbol: CLDN18,   antigen_class: isoform_variant,
+                  variant: "exon1a splice variant; CLDN18.1 shares the gene",
+                  warning: "Gene-level TPM sums 18.1 + 18.2. Isoform-level quantification or
+                            RT-PCR/IHC is required for a real estimate."}
+  EGFRvIII:      {symbol: EGFR,     antigen_class: isoform_variant,
+                  variant: "exon 2-7 deletion",
+                  warning: "Gene-level TPM cannot separate vIII from wild-type EGFR."}
+
+  # --- glycan / glycolipid antigens: NO gene encodes these ---
+  GD2:           {antigen_class: glycolipid, biosynthesis_genes: [ST8SIA1, B4GALNT1],
+                  warning: "Ganglioside, not a gene product. Surface density depends on synthase
+                            activity, substrate supply and catabolism, and is NOT predictable
+                            from synthase RNA. This model cannot score it."}
+  Globo-H:       {antigen_class: glycan, biosynthesis_genes: [FUT1, FUT2],  warning: "See GD2."}
+  Lewis-Y:       {antigen_class: glycan, biosynthesis_genes: [FUT1, FUT3, FUT4], warning: "See GD2."}
+  sTn:           {antigen_class: glycan, biosynthesis_genes: [ST6GALNAC1],  warning: "See GD2."}

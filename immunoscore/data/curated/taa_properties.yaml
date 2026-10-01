@@ -33,3 +33,14 @@ TAAs:
     epitope_membrane_distance_nm: 12
     source: "template. PMID not verified in this repository."
     confidence: unknown
+  STEAP1:
+    symbol: STEAP1
+    topology: six_transmembrane          # STEAP family: 6-TM, short extracellular loops
+    epitope_membrane_distance_nm: 2      # structurally constrained: short extracellular loops
+                                         # mean any epitope is membrane-proximal
+    epitope_confidence: high             # derived from topology, not a solved epitope structure
+    internalization_rate: null           # DO NOT GUESS — see note below
+    half_life_surface_h: null
+    surface_fraction: null
+    source: "UniProt Q9UHE8 topology; internalization not yet determined"
+    confidence: partial

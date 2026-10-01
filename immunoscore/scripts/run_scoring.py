@@ -31,7 +31,19 @@ def main() -> None:
     parser.add_argument("--assay-hours", type=float, default=None)
     args = parser.parse_args()
     identity = gene_identity(args.taa)
-    overrides = {"jurkat_pd1": args.jurkat_pd1, "taa_entry": identity["curated_entry"]}
+    if identity.get("refused"):
+        print(identity.get("warning") or "refused")
+        genes = identity.get("biosynthesis_genes") or []
+        if genes:
+            print("biosynthesis genes (not scored): " + ", ".join(genes))
+        return
+    overrides = {
+        "jurkat_pd1": args.jurkat_pd1,
+        "taa_entry": identity["curated_entry"],
+        "resolution_flags": list(identity.get("flags") or []),
+    }
+    if identity.get("confidence_override"):
+        overrides["confidence_override"] = identity["confidence_override"]
     if args.assay_hours is not None:
         overrides["assay_duration_h"] = args.assay_hours
     cfg = build_cfg(overrides)

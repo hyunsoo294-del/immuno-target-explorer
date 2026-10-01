@@ -101,6 +101,9 @@ def _runtime(cfg: dict, identity: dict, settings: dict) -> dict:
     runtime = dict(cfg)
     runtime.update(settings)
     runtime["taa_entry"] = identity["curated_entry"]
+    runtime["resolution_flags"] = list(identity.get("flags") or [])
+    if identity.get("confidence_override"):
+        runtime["confidence_override"] = identity["confidence_override"]
     return runtime
 
 
@@ -154,11 +157,25 @@ def render() -> None:
         st.caption(manifest.get("release") or "DepMap")
         return
 
+    if identity.get("refused"):
+        st.warning(identity.get("warning") or "이 항원은 유전자 점수로 계산하지 않습니다.")
+        genes = identity.get("biosynthesis_genes") or []
+        if genes:
+            st.caption("생합성 유전자는 참고용입니다. 점수 표는 만들지 않습니다: " + ", ".join(genes))
+        return
+
     symbol = identity["gene_symbol"]
     ensembl = identity["gene_id"] or "Ensembl 없음"
     n_lines = int(models["ModelID"].isin(expression.index).sum())
-    status = f"{symbol} · {ensembl} · 암 세포주 {n_lines}개"
+    query_text = str(identity.get("query") or symbol).strip()
+    head = f"{query_text} → {symbol}" if query_text.upper() != symbol.upper() else symbol
+    route = identity.get("route_label") or ""
+    status = f"{head} · {ensembl} · 암 세포주 {n_lines:,}개"
+    if route:
+        status += f" · {route}"
     warnings = []
+    if identity.get("warning"):
+        warnings.append(identity["warning"])
     if not identity["curated"]:
         warnings.append("큐레이션 항목 없음")
     if cfg.get("surfaceome") is None:

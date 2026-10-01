@@ -80,6 +80,16 @@ f7_bins:
 f7_unknown_score: 50
 f7_nm_per_residue: 0.34
 
+f7_epitope_proximity:
+  mode: gate                # was: additive weighted term
+  gate_exponent: 1.0        # FIXED. Do not tune.
+  note: >
+    Moved to a multiplicative gate on mechanistic grounds (geometric constraint on synapse
+    formation), NOT because it improves the fit. Exponents above 1.0 do improve the current
+    n=5 correlation, but that improvement is contingent on an assumed value for STEAP1
+    internalization which has not been measured. Do not raise this exponent until that value
+    exists. See docs/refit_log.md 2026-10-01.
+
 exclude_lineages:
   - Normal
   - Fibroblast
@@ -137,6 +147,7 @@ flag_labels:
   SUSPENSION_PAIR: 부유세포쌍
   RAMOS_CONFOUND: Ramos교차
   EFFECTOR_FACTOR_INERT: 효과기무관
+  ISOFORM_UNRESOLVED: 이소형미분리
 
 hla_genes: [HLA-A, HLA-B, HLA-C, B2M]
 jak_genes: [JAK1, JAK2]

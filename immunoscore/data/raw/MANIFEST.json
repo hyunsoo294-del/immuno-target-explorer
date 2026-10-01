@@ -18,5 +18,12 @@
     1673,
     19193
   ],
-  "value": "log2(TPM+1)"
+  "value": "log2(TPM+1)",
+  "hgnc": {
+    "file": "immunoscore/data/reference/hgnc_complete_set.txt",
+    "url": "https://storage.googleapis.com/public-download-files/hgnc/tsv/tsv/hgnc_complete_set.txt",
+    "downloaded_at": "2026-10-01",
+    "sha256": "91d0ad20c34f26fb12c8cce3f80a65a6fc694f3a508040b19f6bfa29ae0d889e",
+    "bytes": 16953545
+  }
 }

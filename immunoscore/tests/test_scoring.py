@@ -140,15 +140,24 @@ class ScoreTests(unittest.TestCase):
 
         models, cfg = _fixture()
         result = score_models(models, "ERBB2", "CD3", "PBMC", cfg)
-        dropped = result.iloc[0]["zero_variance_factors"].split(",")
-        self.assertIn("F7_epitope_proximity", dropped)
+        dropped = [name for name in result.iloc[0]["zero_variance_factors"].split(",") if name]
+        self.assertNotIn("F7_epitope_proximity", dropped)
+        self.assertEqual(cfg["params"]["f7_epitope_proximity"]["gate_exponent"], 1.0)
+        self.assertEqual(cfg["weights"]["combinations"]["4-1BB__Jurkat_NFkB"]["weights"]["F7_epitope_proximity"], 7)
         effective = json.loads(result.iloc[0]["effective_weights"])
         self.assertNotIn("F7_epitope_proximity", effective)
         self.assertAlmostEqual(sum(effective.values()), 100.0, places=6)
         text = result.iloc[0]["flag_text"]
         self.assertIn("무변별인자(", text)
         self.assertIn("균일성", text)
-        self.assertIn("에피톱", text)
+        self.assertNotIn("에피톱", text)
+        for _, row in result.iterrows():
+            if pd.isna(row["F1_expression"]) or pd.isna(row["score"]):
+                continue
+            available = {factor: weight for factor, weight in effective.items() if pd.notna(row[factor])}
+            base = sum(float(row[factor]) * weight for factor, weight in available.items()) / sum(available.values())
+            expected = (float(row["F1_expression"]) / 100.0) * (float(row["F7_epitope_proximity"]) / 100.0) * base
+            self.assertAlmostEqual(float(row["score"]), expected, places=6)
 
     def test_subscores_ignore_other_lines_in_the_expression_frame(self):
         models, cfg = _fixture()
@@ -174,10 +183,14 @@ class ScoreTests(unittest.TestCase):
             self.assertAlmostEqual(float(alone.iloc[0][factor]), float(among.iloc[0][factor]), places=5, msg=factor)
 
     def test_a_single_line_keeps_constant_factors(self):
+        import json
+
         models, cfg = _fixture()
         result = score_models(models.iloc[:1], "ERBB2", "CD3", "PBMC", cfg)
         self.assertEqual(result.iloc[0]["zero_variance_factors"], "")
         self.assertNotIn("ZERO_VARIANCE_FACTOR", result.iloc[0]["flags"])
+        effective = json.loads(result.iloc[0]["effective_weights"])
+        self.assertNotIn("F7_epitope_proximity", effective)
 
     def test_cell_size_stays_out_until_diameter_and_flag_exist(self):
         from immunoscore.src.data.morphology import effective_accessibility
@@ -246,11 +259,11 @@ class GateTests(unittest.TestCase):
         chosen = cfg["models"][cfg["models"]["CellLineName"].isin(names)]
         result = score_models(chosen, identity["gene_symbol"], "4-1BB", "Jurkat_NFkB", cfg)
         expected = {
-            "Calu-3": 36.9,
-            "HCC1954": 32.1,
-            "NCI-N87": 30.1,
-            "SK-BR-3": 29.9,
-            "MDA-MB-231": 2.4,
+            "Calu-3": 27.7,
+            "HCC1954": 24.1,
+            "NCI-N87": 22.6,
+            "SK-BR-3": 22.4,
+            "MDA-MB-231": 1.8,
         }
         got = {}
         for name, score in expected.items():
@@ -266,7 +279,41 @@ class GateTests(unittest.TestCase):
         shown = {labels[factor]: round(weight, 1) for factor, weight in effective.items()}
         self.assertEqual(shown, {"접촉": 47.6, "내재화": 28.6, "당질층": 23.8})
         self.assertIn("균일성", result.iloc[0]["flag_text"])
-        self.assertIn("에피톱", result.iloc[0]["flag_text"])
+        self.assertNotIn("에피톱", result.iloc[0]["flag_text"])
+        self.assertTrue((result["F7_epitope_proximity"] == 75).all())
+
+    def test_steap1_epitope_gate_does_not_change_within_panel_scores(self):
+        import json
+        from pathlib import Path
+
+        parquet = Path(__file__).resolve().parents[1] / "data" / "processed" / "expression_log2tpm.parquet"
+        if not parquet.exists():
+            self.skipTest("DepMap parquet is not in this checkout")
+        from immunoscore.src.genes import gene_identity
+        from immunoscore.src.scoring import build_cfg
+
+        load_configs.cache_clear()
+        identity = gene_identity("STEAP1")
+        self.assertIsNone(identity["curated_entry"].get("internalization_rate"))
+        self.assertEqual(identity["curated_entry"]["epitope_membrane_distance_nm"], 2)
+        cfg = build_cfg({"taa_entry": identity["curated_entry"]})
+        names = ["LNCaP clone FGC", "PC-3"]
+        chosen = cfg["models"][cfg["models"]["CellLineName"].isin(names)]
+        self.assertEqual(set(chosen["CellLineName"]), set(names))
+        result = score_models(chosen, identity["gene_symbol"], "4-1BB", "Jurkat_NFkB", cfg)
+        self.assertTrue(result["F3_internalization"].isna().all())
+        self.assertTrue((result["F7_epitope_proximity"] == 100).all())
+        effective = json.loads(result.iloc[0]["effective_weights"])
+        self.assertNotIn("F7_epitope_proximity", effective)
+        for _, row in result.iterrows():
+            available = {factor: weight for factor, weight in effective.items() if pd.notna(row[factor])}
+            base = sum(float(row[factor]) * weight for factor, weight in available.items()) / sum(available.values())
+            ungated = (float(row["F1_expression"]) / 100.0) * base
+            self.assertAlmostEqual(float(row["score"]), ungated, places=6, msg=row["cell_line"])
+        rounded = {
+            name: round(float(result.loc[result["cell_line"] == name, "score"].iloc[0]), 1) for name in names
+        }
+        self.assertEqual(rounded, {"LNCaP clone FGC": 21.5, "PC-3": 1.6})
 
     def test_live_subscores_do_not_depend_on_the_selection(self):
         from pathlib import Path

@@ -145,7 +145,7 @@ class Her2CalibrationTests(unittest.TestCase):
         out, meta = attach_calibration(result, identity["gene_symbol"], "4-1BB", "Jurkat_NFkB", cfg)
         self.assertTrue(meta["ok"], meta.get("reason"))
         self.assertAlmostEqual(meta["a"], 2.8213, places=4)
-        self.assertAlmostEqual(meta["b"], 0.03936, places=5)
+        self.assertAlmostEqual(meta["b"], 0.05248, places=5)
         self.assertAlmostEqual(meta["r2"], 0.9518, places=4)
         self.assertEqual(meta["n"], 5)
         score_order = out.sort_values("score", ascending=False)["cell_line"].tolist()
@@ -160,6 +160,7 @@ class Her2CalibrationTests(unittest.TestCase):
             self.assertFalse(bool(out.loc[out["cell_line"] == name, "emax_extrapolated"].iloc[0]))
         self.assertAlmostEqual(preds[0] / preds[1], 1.55, places=2)
         self.assertIn("2.8213", meta["caption"])
+        self.assertIn("0.05248", meta["caption"])
         self.assertIn("R²=0.952", meta["caption"])
         self.assertNotIn("EXTRAPOLATED", out.iloc[0]["flags"])
 
