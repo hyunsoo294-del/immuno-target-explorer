@@ -359,6 +359,8 @@ def build_cfg(overrides: dict | None = None) -> dict:
     from immunoscore.src.config_loader import load_configs
     from immunoscore.src.data.depmap import cohort_expression, load_models, manifest
 
+    from immunoscore.src.data.expression_reference import load_expression_reference
+
     configs = load_configs()
     expression = cohort_expression()
     models = load_models()
@@ -371,6 +373,7 @@ def build_cfg(overrides: dict | None = None) -> dict:
         "genes": configs["genes"],
         "mucins": configs["mucins"],
         "expression": expression,
+        "expression_reference": load_expression_reference(),
         "models": models,
         "manifest": manifest(),
         "assay_duration_h": configs["params"]["assay_duration_h_default"],

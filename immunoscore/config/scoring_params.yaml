@@ -1,4 +1,13 @@
 # Every threshold the scorer uses. Refit by editing this file, not the Python.
+
+# Absolute saturating map for expression factors.
+# k = span / (p90 - p10) is stored in data/reference/expression_reference.parquet.
+# Editing span here does not change scores until that file is rebuilt.
+cohort_logistic:
+  span: 4.0
+  score_scale: 100
+
+
 # A factor whose sub-score SD across the result set is below this has no
 # ranking power. scoring.py drops it from the weighted sum and renormalizes.
 variance_eps: 1.0

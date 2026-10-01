@@ -150,6 +150,29 @@ class ScoreTests(unittest.TestCase):
         self.assertIn("균일성", text)
         self.assertIn("에피톱", text)
 
+    def test_subscores_ignore_other_lines_in_the_expression_frame(self):
+        models, cfg = _fixture()
+        genes = ["ICAM1", "CD58", "MUC1", "MUC16", "CD274", "CLTC", "ST6GAL1"]
+        cfg["expression_reference"] = pd.DataFrame(
+            {"median": 3.0, "p10": 1.0, "p90": 5.0, "k": 1.0},
+            index=genes,
+        )
+        cfg["expression"]["ST6GAL1"] = [1.0, 2.0, 6.0, 3.0]
+        one = models.iloc[:1]
+        extra_ids = [f"ACH-9{i:05d}" for i in range(50)]
+        extra = pd.DataFrame(0.0, index=extra_ids, columns=cfg["expression"].columns)
+        extra["ICAM1"] = 20.0
+        extra["MUC1"] = 20.0
+        extra["CD274"] = 20.0
+        extra["CLTC"] = 20.0
+        extra["ST6GAL1"] = 20.0
+        wide = dict(cfg)
+        wide["expression"] = pd.concat([cfg["expression"], extra])
+        alone = score_models(one, "ERBB2", "CD3", "PBMC", cfg)
+        among = score_models(one, "ERBB2", "CD3", "PBMC", wide)
+        for factor in ("F3_internalization", "F4_checkpoint", "F5_adhesion", "F6_glycocalyx"):
+            self.assertAlmostEqual(float(alone.iloc[0][factor]), float(among.iloc[0][factor]), places=5, msg=factor)
+
     def test_a_single_line_keeps_constant_factors(self):
         models, cfg = _fixture()
         result = score_models(models.iloc[:1], "ERBB2", "CD3", "PBMC", cfg)
@@ -223,11 +246,11 @@ class GateTests(unittest.TestCase):
         chosen = cfg["models"][cfg["models"]["CellLineName"].isin(names)]
         result = score_models(chosen, identity["gene_symbol"], "4-1BB", "Jurkat_NFkB", cfg)
         expected = {
-            "Calu-3": 39.2,
-            "HCC1954": 35.0,
-            "NCI-N87": 32.0,
-            "SK-BR-3": 28.8,
-            "MDA-MB-231": 2.7,
+            "Calu-3": 36.9,
+            "HCC1954": 32.1,
+            "NCI-N87": 30.1,
+            "SK-BR-3": 29.9,
+            "MDA-MB-231": 2.4,
         }
         got = {}
         for name, score in expected.items():
@@ -244,6 +267,31 @@ class GateTests(unittest.TestCase):
         self.assertEqual(shown, {"접촉": 47.6, "내재화": 28.6, "당질층": 23.8})
         self.assertIn("균일성", result.iloc[0]["flag_text"])
         self.assertIn("에피톱", result.iloc[0]["flag_text"])
+
+    def test_live_subscores_do_not_depend_on_the_selection(self):
+        from pathlib import Path
+
+        parquet = Path(__file__).resolve().parents[1] / "data" / "processed" / "expression_log2tpm.parquet"
+        if not parquet.exists():
+            self.skipTest("DepMap parquet is not in this checkout")
+        from immunoscore.src.genes import gene_identity
+        from immunoscore.src.scoring import build_cfg, score_models
+
+        load_configs.cache_clear()
+        identity = gene_identity("HER2")
+        cfg = build_cfg({"taa_entry": identity["curated_entry"]})
+        panel = cfg["models"].head(50)
+        one = panel.iloc[:1]
+        model_id = str(one.iloc[0]["ModelID"])
+        alone = score_models(one, identity["gene_symbol"], "CD3", "PBMC", cfg)
+        group = score_models(panel, identity["gene_symbol"], "CD3", "PBMC", cfg)
+        grouped = group.loc[group["ModelID"] == model_id].iloc[0]
+        sliced = dict(cfg)
+        sliced["expression"] = cfg["expression"].loc[panel["ModelID"].astype(str)]
+        alone_sliced = score_models(one, identity["gene_symbol"], "CD3", "PBMC", sliced)
+        for factor in ("F1_expression", "F3_internalization", "F4_checkpoint", "F5_adhesion", "F6_glycocalyx"):
+            self.assertAlmostEqual(float(alone.iloc[0][factor]), float(grouped[factor]), places=5, msg=factor)
+            self.assertAlmostEqual(float(alone.iloc[0][factor]), float(alone_sliced.iloc[0][factor]), places=5, msg=factor)
 
 
 if __name__ == "__main__":

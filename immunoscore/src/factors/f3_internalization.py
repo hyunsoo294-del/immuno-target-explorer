@@ -5,8 +5,8 @@ keep crosslinking. Slow internalizers score higher.
 
 Data behind it: a curated per-TAA rate and surface half-life in taa_properties.yaml.
 There is no per-cell-line antibody internalization database. A weak modifier from
-endocytic-gene RNA (CLTC, AP2M1, DNM2, RAB5A, RAB7A, CAV1) is an unvalidated proxy
-and is capped.
+endocytic-gene RNA (CLTC, AP2M1, DNM2, RAB5A, RAB7A, CAV1) uses the same frozen
+cohort logistic as the other expression factors and is capped.
 
 Limitation: the modifier has not been checked against measured internalization.
 Missing curated entries stay NaN. Heuristic for panel selection, not a predictor.
@@ -17,7 +17,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from immunoscore.src.factors.common import clip_score, cohort_z, empty_factor
+from immunoscore.src.factors.common import clip_score, empty_factor, logistic_context, weighted_logistic
 
 
 def score(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cfg: dict) -> pd.DataFrame:
@@ -36,14 +36,14 @@ def score(cell_lines: pd.DataFrame, taa: str, arm: str, effector: str, cfg: dict
     base = alpha * rate_score + (1.0 - alpha) * (100.0 * retention)
     ids = cell_lines["ModelID"].astype(str)
     expr = cfg["expression"]
-    genes = [gene for gene in params["endocytic_genes"] if gene in expr.columns]
+    genes = {gene: 1.0 for gene in params["endocytic_genes"] if gene in expr.columns}
     modifier = pd.Series(0.0, index=ids)
     if genes:
-        z = pd.concat({gene: cohort_z(expr[gene], int(params["zscore_ddof"])) for gene in genes}, axis=1)
-        mean_z = z.reindex(ids).mean(axis=1, skipna=True)
+        reference, scale = logistic_context(cfg)
+        mean_s = weighted_logistic(expr, genes, reference, scale).reindex(ids)
         cap = float(params["internalization_modifier_cap"])
-        z_at_cap = float(params["internalization_modifier_z_at_cap"])
-        modifier = (mean_z / z_at_cap * cap).clip(-cap, cap).fillna(0.0)
+        center = scale / 2.0
+        modifier = ((mean_s - center) / center * cap).clip(-cap, cap).fillna(0.0)
     # High endocytic RNA lowers the score. The modifier is an unvalidated proxy.
     sub = clip_score(pd.Series(base, index=ids) - modifier)
     detail = (

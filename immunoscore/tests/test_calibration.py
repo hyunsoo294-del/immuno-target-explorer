@@ -7,6 +7,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from immunoscore.src.calibration import (
@@ -22,8 +23,8 @@ from immunoscore.src.scoring import score_models
 SPEC_SCORES = [39.2, 35.1, 32.0, 28.8, 2.7]
 SPEC_EMAX = [25000, 15000, 8000, 7000, 900]
 SPEC_LINES = ["Calu-3", "HCC1954", "NCI-N87", "SK-BR-3", "MDA-MB-231"]
-LIVE_PRED = [19703, 13734, 10561, 7975, 829]
-LIVE_RATIO = [0.79, 0.92, 1.32, 1.14, 0.92]
+LIVE_PRED = [18820, 12143, 10117, 9922, 824]
+LIVE_RATIO = [0.75, 0.81, 1.26, 1.42, 0.92]
 LIVE_MEASURED = [25000, 15000, 8000, 7000, 900]
 
 
@@ -61,6 +62,17 @@ def _fixture():
         "surfaceome": None,
     }
     return models, cfg
+
+
+class LogisticTests(unittest.TestCase):
+    def test_median_is_half_scale_and_p90_is_near_88(self):
+        from immunoscore.src.factors.common import gene_logistic
+
+        values = pd.Series([5.0, 7.0, 3.0])
+        score = gene_logistic(values, median=5.0, k=1.0, scale=100.0)
+        self.assertAlmostEqual(float(score.iloc[0]), 50.0, places=6)
+        self.assertAlmostEqual(float(score.iloc[1]), 100.0 / (1.0 + np.exp(-2.0)), places=6)
+        self.assertAlmostEqual(float(score.iloc[2]), 100.0 / (1.0 + np.exp(2.0)), places=6)
 
 
 class CalibrationMathTests(unittest.TestCase):
@@ -132,9 +144,9 @@ class Her2CalibrationTests(unittest.TestCase):
         result = score_models(chosen, identity["gene_symbol"], "4-1BB", "Jurkat_NFkB", cfg)
         out, meta = attach_calibration(result, identity["gene_symbol"], "4-1BB", "Jurkat_NFkB", cfg)
         self.assertTrue(meta["ok"], meta.get("reason"))
-        self.assertAlmostEqual(meta["a"], 2.8156, places=4)
-        self.assertAlmostEqual(meta["b"], 0.03776, places=5)
-        self.assertAlmostEqual(meta["r2"], 0.9743, places=4)
+        self.assertAlmostEqual(meta["a"], 2.8213, places=4)
+        self.assertAlmostEqual(meta["b"], 0.03936, places=5)
+        self.assertAlmostEqual(meta["r2"], 0.9518, places=4)
         self.assertEqual(meta["n"], 5)
         score_order = out.sort_values("score", ascending=False)["cell_line"].tolist()
         emax_order = out.sort_values("emax_pred", ascending=False)["cell_line"].tolist()
@@ -146,9 +158,9 @@ class Her2CalibrationTests(unittest.TestCase):
             self.assertEqual(round(pred), expected, name)
             self.assertAlmostEqual(pred / measured, ratio, places=2, msg=name)
             self.assertFalse(bool(out.loc[out["cell_line"] == name, "emax_extrapolated"].iloc[0]))
-        self.assertAlmostEqual(preds[0] / preds[1], 1.43, places=2)
-        self.assertIn("2.8156", meta["caption"])
-        self.assertIn("R²=0.974", meta["caption"])
+        self.assertAlmostEqual(preds[0] / preds[1], 1.55, places=2)
+        self.assertIn("2.8213", meta["caption"])
+        self.assertIn("R²=0.952", meta["caption"])
         self.assertNotIn("EXTRAPOLATED", out.iloc[0]["flags"])
 
 

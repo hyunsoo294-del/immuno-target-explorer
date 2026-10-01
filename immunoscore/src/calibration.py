@@ -104,6 +104,7 @@ def yaml_fingerprint() -> str:
         CONFIG_DIR / "weights.yaml",
         CONFIG_DIR / "scoring_params.yaml",
         DATA_DIR / "curated" / "morphology.yaml",
+        DATA_DIR / "reference" / "expression_reference.parquet",
     ):
         digest.update(path.name.encode())
         digest.update(path.read_bytes())

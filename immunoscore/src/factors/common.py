@@ -52,3 +52,56 @@ def sigmoid_scaled(values: pd.Series, center: float, width: float) -> pd.Series:
 
 def clip_score(values: pd.Series) -> pd.Series:
     return values.clip(lower=0.0, upper=100.0)
+
+
+def gene_logistic(values: pd.Series, median: float, k: float, scale: float) -> pd.Series:
+    """S = scale / (1 + exp(-k * (x - median))). x is already log2(TPM+1)."""
+    if pd.isna(median) or pd.isna(k) or float(k) == 0 or pd.isna(scale):
+        return pd.Series(np.nan, index=values.index)
+    exponent = (-float(k) * (values.astype("float64") - float(median))).clip(-60.0, 60.0)
+    return float(scale) / (1.0 + np.exp(exponent))
+
+
+def _reference_row(reference: pd.DataFrame, gene: str):
+    if gene not in reference.index:
+        return None
+    row = reference.loc[gene]
+    if isinstance(row, pd.DataFrame):
+        row = row.iloc[0]
+    if pd.isna(row.get("median")) or pd.isna(row.get("k")):
+        return None
+    return row
+
+
+def logistic_context(cfg: dict) -> tuple[pd.DataFrame, float]:
+    """Frozen reference plus the 0-100 scale. Never recomputed from the selection."""
+    params = cfg["params"]["cohort_logistic"]
+    scale = float(params["score_scale"])
+    reference = cfg.get("expression_reference")
+    if reference is None:
+        from immunoscore.src.data.expression_reference import load_expression_reference
+
+        reference = load_expression_reference()
+    return reference, scale
+
+
+def weighted_logistic(expr: pd.DataFrame, weights: dict, reference: pd.DataFrame, scale: float) -> pd.Series:
+    """Weighted mean of per-gene logistics. Missing genes are left out, not scored as 0."""
+    present = {}
+    for gene, weight in weights.items():
+        if not weight or gene not in expr.columns or _reference_row(reference, gene) is None:
+            continue
+        present[gene] = float(weight)
+    if not present:
+        return pd.Series(np.nan, index=expr.index)
+    total = float(sum(present.values()))
+    acc = pd.Series(0.0, index=expr.index)
+    coverage = pd.Series(0.0, index=expr.index)
+    for gene, weight in present.items():
+        row = _reference_row(reference, gene)
+        score = gene_logistic(expr[gene], float(row["median"]), float(row["k"]), scale)
+        share = weight / total
+        valid = score.notna()
+        acc = acc.add(score.fillna(0.0) * share, fill_value=0.0)
+        coverage = coverage.add(valid.astype(float) * share, fill_value=0.0)
+    return (acc / coverage.where(coverage > 0, np.nan)).where(coverage > 0, np.nan)
