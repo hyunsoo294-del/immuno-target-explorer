@@ -1,0 +1,156 @@
+# Every threshold the scorer uses. Refit by editing this file, not the Python.
+
+# Absolute saturating map for expression factors.
+# k = span / (p90 - p10) is stored in data/reference/expression_reference.parquet.
+# Editing span here does not change scores until that file is rebuilt.
+cohort_logistic:
+  span: 4.0
+  score_scale: 100
+
+
+# A factor whose sub-score SD across the result set is below this has no
+# ranking power. scoring.py drops it from the weighted sum and renormalizes.
+variance_eps: 1.0
+
+# Contact area also depends on cell diameter. The formula is
+# accessibility * (mean_diameter_um / d_ref_um)^2.
+# It stays off until diameters are measured. A null reference does not invent one.
+cell_size:
+  use_cell_size: false
+  d_ref_um: null
+
+assay_duration_h_default: 24
+assay_duration_h_min: 6
+assay_duration_h_max: 36
+zscore_ddof: 0
+
+abc_rna_fallback:
+  # Unvalidated global curve, not a fit to QIFIKIT data.
+  # TPM = 2^(log2(TPM+1)) - 1
+  # ABC = molecules_per_tpm * TPM * surface_fraction
+  # molecules_per_tpm is chosen so that log2(TPM+1) ≈ 11 and surface_fraction 0.6
+  # lands near 1e6 ABC, the order of magnitude reported for HER2 on SK-BR-3.
+  molecules_per_tpm: 800
+  default_surface_fraction: 0.5
+
+f1_expression:
+  mode: gate                 # multiplicative gate, not an additive weighted term
+  abc50_base: 30000
+  hill_h: 2.0
+  gate_exponent: 1.0         # gamma; do not exceed 2.0 without new data
+  note: >
+    F1 multiplies the weighted sum of F2-F7. Antigen density is necessary but not
+    sufficient. Above threshold the Hill function plateaus, so density neither
+    rewards nor penalizes. A descending or bell-shaped F1 is intentionally not used:
+    in the 2026-09 HER2 panel, density and contact morphology are inversely aligned,
+    and those two explanations cannot be separated.
+
+internalization_rate_score:
+  slow: 90
+  moderate: 60
+  fast: 30
+internalization_modifier_cap: 15
+# Mean endocytic z of this magnitude maps to the full ±cap.
+internalization_modifier_z_at_cap: 2.0
+retention_blend_alpha: 0.5
+
+f2:
+  cv_ref: 0.5
+  default_pos_frac: 0.85
+  default_cv: 0.4
+  dilute_floor: 0.35
+  dilute_slope: 0.65
+  dilute_cv_scale: 0.5
+
+f4:
+  sigmoid_center: 0.0
+  sigmoid_width: 1.2
+
+f6:
+  mucin_weight: 0.65
+  sialylation_weight: 0.35
+  sigmoid_center: 0.0
+  sigmoid_width: 1.2
+
+f7_bins:
+  - {max_nm: 5, score: 100}
+  - {max_nm: 10, score: 75}
+  - {max_nm: 20, score: 50}
+  - {max_nm: null, score: 25}
+f7_unknown_score: 50
+f7_nm_per_residue: 0.34
+
+f7_epitope_proximity:
+  mode: gate                # was: additive weighted term
+  gate_exponent: 1.0        # FIXED. Do not tune.
+  note: >
+    Moved to a multiplicative gate on mechanistic grounds (geometric constraint on synapse
+    formation), NOT because it improves the fit. Exponents above 1.0 do improve the current
+    n=5 correlation, but that improvement is contingent on an assumed value for STEAP1
+    internalization which has not been measured. Do not raise this exponent until that value
+    exists. See docs/refit_log.md 2026-10-01.
+
+exclude_lineages:
+  - Normal
+  - Fibroblast
+
+cancer_line_cap_warn: 200
+
+tier_completeness:
+  protein_measured: 1.0
+  measured: 1.0
+  surfaceome_verified: 0.9
+  rna_only: 0.55
+  imputed: 0.4
+  default: 0.25
+  not_applicable: 1.0
+
+confidence:
+  high_min_completeness: 0.8
+  medium_min_completeness: 0.6
+  # RNA-only surface ABC cannot support a higher label.
+  rna_only_f1_caps_at: LOW
+  # Hand-entered morphology is the only accessibility source allowed to stay at HIGH.
+  non_curated_accessibility_cap: MEDIUM
+
+gates:
+  below_antigen_threshold_s1: 30
+  low_accessibility: 0.65
+  high_heterogeneity_pos_frac: 0.6
+  mucin_high_s6: 30
+  low_confidence_completeness: 0.6
+  hla_low_log2tpm: 1.0
+  taa_present_log2tpm: 1.0
+
+confidence_labels:
+  HIGH: 높음
+  MEDIUM: 중
+  LOW: 낮음
+
+accessibility_source_labels:
+  curated: 기록
+  growthpattern_default: 성장패턴
+  default: 기본
+
+flag_labels:
+  BELOW_ANTIGEN_THRESHOLD: 항원역치미달
+  LOW_ACCESSIBILITY: 접근성낮음
+  ACCESSIBILITY_ESTIMATED: 형태추정
+  ZERO_VARIANCE_FACTOR: 무변별인자
+  EXTRAPOLATED: 외삽
+  HIGH_HETEROGENEITY: 불균일
+  MUCIN_HIGH: 당질층높음
+  JAK_LOSS: JAK소실
+  LOW_CONFIDENCE: 저신뢰
+  NO_SURFACE_EVIDENCE: 표면근거없음
+  NK_BACKGROUND_RISK: NK배경
+  SUSPENSION_PAIR: 부유세포쌍
+  RAMOS_CONFOUND: Ramos교차
+  EFFECTOR_FACTOR_INERT: 효과기무관
+  ISOFORM_UNRESOLVED: 이소형미분리
+
+hla_genes: [HLA-A, HLA-B, HLA-C, B2M]
+jak_genes: [JAK1, JAK2]
+ifng_genes: [JAK1, JAK2, STAT1, IRF1]
+endocytic_genes: [CLTC, AP2M1, DNM2, RAB5A, RAB7A, CAV1]
+ramos_name_contains: RAMOS

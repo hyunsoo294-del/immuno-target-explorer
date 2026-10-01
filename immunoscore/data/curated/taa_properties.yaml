@@ -1,0 +1,46 @@
+# Curated TAA constants. Rates and distances are templates.
+# source text is explicit when a PMID was not verified. Do not invent PMIDs.
+TAAs:
+  ERBB2:
+    aliases: [HER2, HER-2, NEU]
+    internalization_rate: slow
+    half_life_surface_h: 12
+    surface_fraction: 0.6
+    epitope_membrane_distance_nm: 5
+    source: "template from the scoring brief (slow, 12 h, surface fraction 0.6, 5 nm). PMID not verified in this repository."
+    confidence: unknown
+  EGFR:
+    aliases: []
+    internalization_rate: fast
+    half_life_surface_h: 2
+    surface_fraction: 0.45
+    epitope_membrane_distance_nm: 15
+    source: "template. EGFR is treated as a fast internalizer. PMID not verified in this repository."
+    confidence: unknown
+  CEACAM5:
+    aliases: [CEA]
+    internalization_rate: moderate
+    half_life_surface_h: 8
+    surface_fraction: 0.7
+    epitope_membrane_distance_nm: 25
+    source: "template. GPI-anchored CEA; N-terminal epitope treated as membrane-distal. PMID not verified in this repository."
+    confidence: unknown
+  TACSTD2:
+    aliases: [TROP2, TROP-2]
+    internalization_rate: moderate
+    half_life_surface_h: 6
+    surface_fraction: 0.5
+    epitope_membrane_distance_nm: 12
+    source: "template. PMID not verified in this repository."
+    confidence: unknown
+  STEAP1:
+    symbol: STEAP1
+    topology: six_transmembrane          # STEAP family: 6-TM, short extracellular loops
+    epitope_membrane_distance_nm: 2      # structurally constrained: short extracellular loops
+                                         # mean any epitope is membrane-proximal
+    epitope_confidence: high             # derived from topology, not a solved epitope structure
+    internalization_rate: null           # DO NOT GUESS — see note below
+    half_life_surface_h: null
+    surface_fraction: null
+    source: "UniProt Q9UHE8 topology; internalization not yet determined"
+    confidence: partial

@@ -1,0 +1,153 @@
+# Keyed as "<ARM>__<EFFECTOR>". F2–F7 weights sum to 100. F1 is a gate, not a weight.
+# fitted_on must say "not fitted" unless the numbers were fit to measured Emax.
+readout_labels:
+  cytotoxicity: 세포독성
+  reporter_luminescence: 리포터 발광
+  cytokine_proliferation: 사이토카인/증식
+  SEAP_reporter: SEAP 리포터
+  activation_markers: 활성 마커
+
+factor_display_order:
+  - F5_adhesion
+  - F6_glycocalyx
+  - F3_internalization
+  - F2_heterogeneity
+  - F4_checkpoint
+  - F7_epitope_proximity
+  - F1_expression
+
+factor_labels:
+  F1_expression: 발현
+  F2_heterogeneity: 균일성
+  F3_internalization: 내재화
+  F4_checkpoint: 체크포인트
+  F5_adhesion: 접촉
+  F6_glycocalyx: 당질층
+  F7_epitope_proximity: 에피톱
+
+combinations:
+
+  CD3__PBMC:
+    readout: cytotoxicity
+    f1_mode: gate
+    fitted_on: "not fitted — structural conversion only, no measured data"
+    rationale: >
+      Full cytotoxic synapse. F1 is a gate. Checkpoint stays because PBMC carries
+      inhibitory receptors. Remaining weights are the previous set with F1 removed,
+      renormalized to 100.
+    weights:
+      F2_heterogeneity:     26.31
+      F6_glycocalyx:        22.37
+      F5_adhesion:          22.37
+      F4_checkpoint:        14.47
+      F3_internalization:   10.53
+      F7_epitope_proximity:  3.95
+
+  CD3__Jurkat_NFAT:
+    readout: reporter_luminescence
+    f1_mode: gate
+    fitted_on: "not fitted — structural conversion only, no measured data"
+    rationale: >
+      Parental NFAT reporter. Structural conversion only. There is no CD3 measurement,
+      so this set is not the 4-1BB Jurkat fit. Checkpoint weight is 0 because the
+      effector gates the factor off.
+    weights:
+      F6_glycocalyx:        29.4
+      F2_heterogeneity:     20.6
+      F5_adhesion:          20.6
+      F3_internalization:   20.6
+      F7_epitope_proximity:  8.8
+      F4_checkpoint:         0
+
+  CD3__Jurkat_NFAT_PD1:
+    readout: reporter_luminescence
+    f1_mode: gate
+    fitted_on: "not fitted — structural conversion only, no measured data"
+    rationale: >
+      PD-1 variant of the CD3 NFAT reporter. Checkpoint weight is restored because the
+      checkbox says this effector has inhibitory receptors. Not a wet-lab fit.
+    weights:
+      F6_glycocalyx:        25.33
+      F2_heterogeneity:     17.72
+      F5_adhesion:          17.72
+      F3_internalization:   17.72
+      F4_checkpoint:        13.92
+      F7_epitope_proximity:  7.59
+
+  4-1BB__PBMC:
+    readout: cytokine_proliferation
+    f1_mode: gate
+    fitted_on: "not fitted — structural conversion only, no measured data"
+    rationale: >
+      Conditional agonist on primary cells. Structural conversion only. Checkpoint
+      stays at its previous relative weight because PBMC is not a gated effector.
+    weights:
+      F6_glycocalyx:        26.47
+      F3_internalization:   22.06
+      F5_adhesion:          20.59
+      F2_heterogeneity:     19.12
+      F4_checkpoint:         5.88
+      F7_epitope_proximity:  5.88
+
+  4-1BB__Jurkat_NFkB:
+    readout: reporter_luminescence
+    f1_mode: gate
+    fitted_on: "n=4 measured Emax, HER2, 2026-09"
+    rationale: >
+      Refit against 4 measured Emax values (HER2, 4-1BB x Jurkat NF-kB reporter).
+      Adhesion x accessibility is the only factor that tracks measured Emax among
+      antigen-positive lines. Checkpoint is 0, not a constant 100. Weights fitted
+      on n=4; a working hypothesis, not a validated model. See docs/refit_2026-09.md.
+      Do not copy this set onto CD3 Jurkat.
+    weights:
+      F5_adhesion:          40
+      F3_internalization:   24
+      F6_glycocalyx:        20
+      F2_heterogeneity:      9
+      F7_epitope_proximity:  7
+      F4_checkpoint:         0
+
+  4-1BB__Jurkat_NFkB_PD1:
+    readout: reporter_luminescence
+    f1_mode: gate
+    fitted_on: "not fitted — structural conversion only, no measured data"
+    rationale: >
+      PD-1 checkbox on the 4-1BB NF-kB reporter. This is not the fitted weight set.
+      Checkpoint is restored and the previous PD-1 weights, minus F1, are renormalized.
+    weights:
+      F6_glycocalyx:        27.03
+      F3_internalization:   24.32
+      F2_heterogeneity:     16.22
+      F5_adhesion:          12.16
+      F4_checkpoint:        12.16
+      F7_epitope_proximity:  8.11
+
+  CD40__HEK:
+    readout: SEAP_reporter
+    f1_mode: gate
+    fitted_on: "not fitted — structural conversion only, no measured data"
+    rationale: >
+      HEK-Blue CD40. Checkpoint weight is 0 because HEK has no inhibitory receptors.
+      Adhesion stays as a small residual term, then scaled by synapse competence.
+    weights:
+      F6_glycocalyx:        34.92
+      F3_internalization:   30.16
+      F2_heterogeneity:     17.46
+      F7_epitope_proximity: 11.11
+      F5_adhesion:           6.35
+      F4_checkpoint:         0
+
+  CD40__Ramos:
+    readout: activation_markers
+    f1_mode: gate
+    fitted_on: "not fitted — structural conversion only, no measured data"
+    rationale: >
+      Ramos CD40. Checkpoint weight is 0. Other weights are the previous set with
+      F1 and the checkpoint point removed, renormalized to 100.
+    weights:
+      F6_glycocalyx:        29.85
+      F3_internalization:   25.37
+      F2_heterogeneity:     17.91
+      F5_adhesion:          17.91
+      F7_epitope_proximity:  8.96
+      F4_checkpoint:         0

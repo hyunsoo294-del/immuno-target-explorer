@@ -1,0 +1,6 @@
+gene_symbol,ModelID,abc,evidence_tier,source_detail
+ERBB2,ACH-000392,150000,default,approximate HER2 ABC from the 2026-09 panel (~150000); not a QIFIKIT calibration
+ERBB2,ACH-000859,500000,default,approximate HER2 ABC from the 2026-09 panel (~500000); not a QIFIKIT calibration
+ERBB2,ACH-000427,900000,default,approximate HER2 ABC from the 2026-09 panel (~900000); not a QIFIKIT calibration
+ERBB2,ACH-000017,1200000,default,approximate HER2 ABC from the 2026-09 panel (~1200000); not a QIFIKIT calibration
+ERBB2,ACH-000768,15000,default,approximate HER2 ABC from the 2026-09 panel (~15000); not a QIFIKIT calibration

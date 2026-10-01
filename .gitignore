@@ -5,6 +5,8 @@ venv/
 env/
 expression_csv/
 cache/
+immunoscore/data/raw/*.csv
+immunoscore/data/processed/
 *.pptx
 _ppt_preview/
 .streamlit/credentials.toml

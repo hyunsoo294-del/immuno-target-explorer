@@ -1,5 +1,11 @@
 # Immuno Target Explorer
 
+The default screen is the TAA analysis (gene, cancer, subtype, immune cell, molecule table). It uses one UCSC Xena Toil TPM cohort for patient-tumor bulk RNA and keeps healthy-blood HPA data in a separate reference view. The previous RNA, protein, TCGA, IHC, and character explorer remains under Legacy explorer.
+
+```bat
+run_chatbot.bat
+```
+
 Gene search for immuno-oncology targets: RNA (HPA/GTEx vs TCGA), protein IHC, TCGA distribution, and CPTAC.
 
 Public sources only. Research use, not for clinical decisions.
