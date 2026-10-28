@@ -6,3 +6,7 @@ plotly>=5.22.0
 python-pptx>=1.0.0
 matplotlib>=3.8.0
 scipy>=1.11.0
+h5py>=3.11.0
+anndata>=0.10.0
+kaleido>=0.2.1
+pytest>=8.0.0

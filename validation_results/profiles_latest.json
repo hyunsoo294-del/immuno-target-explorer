@@ -1,0 +1,1639 @@
+{
+  "run_id": "10149155",
+  "started_at": "2026-10-28T00:46:36Z",
+  "finished_at": null,
+  "app_version": "0.2.0",
+  "checks": [
+    {
+      "name": "profile:HER2:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "ERBB2",
+        "entrez": 2064,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:36Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "HER2",
+            "symbol": "ERBB2",
+            "literature_direction": "ZR-75-1 > MDA-MB-231",
+            "assay_note": "surface flow receptors/cell; DOI 10.4061/2010/814176",
+            "high_sample": "ZR751_BREAST",
+            "low_sample": "MDAMB231_BREAST",
+            "high_value": 6.7664,
+            "low_value": 4.5967,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_adc_context",
+        "therapy_types": [
+          "ADC",
+          "mAb",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:36Z"
+    },
+    {
+      "name": "profile:HER2:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "ERBB2",
+        "entrez": 2064,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:36Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "HER2",
+            "symbol": "ERBB2",
+            "literature_direction": "ZR-75-1 > MDA-MB-231",
+            "assay_note": "surface flow receptors/cell; DOI 10.4061/2010/814176",
+            "high_sample": "ZR751_BREAST",
+            "low_sample": "MDAMB231_BREAST",
+            "high_value": 53.7175,
+            "low_value": 12.8311,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_adc_context",
+        "therapy_types": [
+          "ADC",
+          "mAb",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:36Z"
+    },
+    {
+      "name": "profile:HER2:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "mismatch_direction",
+      "detail": {
+        "symbol": "ERBB2",
+        "entrez": 2064,
+        "n_measured": 375,
+        "retrieved_at": "2026-10-28T00:46:36Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "HER2",
+            "symbol": "ERBB2",
+            "literature_direction": "ZR-75-1 > MDA-MB-231",
+            "assay_note": "surface flow receptors/cell; DOI 10.4061/2010/814176",
+            "high_sample": "ZR751_BREAST",
+            "low_sample": "MDAMB231_BREAST",
+            "high_value": 0.8146,
+            "low_value": 1.2413,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "mismatch_direction",
+            "biology_match": false,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_adc_context",
+        "therapy_types": [
+          "ADC",
+          "mAb",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:36Z"
+    },
+    {
+      "name": "profile:EGFR:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "EGFR",
+        "entrez": 1956,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:36Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "EGFR",
+            "symbol": "EGFR",
+            "literature_direction": "A431 > MCF-7",
+            "assay_note": "flow; DOI 10.1177/39.8.1856460",
+            "high_sample": "A431_SKIN",
+            "low_sample": "MCF7_BREAST",
+            "high_value": 7.8175,
+            "low_value": 0.2621,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_mab_context",
+        "therapy_types": [
+          "mAb",
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:36Z"
+    },
+    {
+      "name": "profile:EGFR:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "data_insufficient",
+      "detail": {
+        "symbol": "EGFR",
+        "entrez": 1956,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:36Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "EGFR",
+            "symbol": "EGFR",
+            "literature_direction": "A431 > MCF-7",
+            "assay_note": "flow; DOI 10.1177/39.8.1856460",
+            "high_sample": "A431_SKIN",
+            "low_sample": "MCF7_BREAST",
+            "high_value": null,
+            "low_value": 0.164,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "data_insufficient",
+            "biology_match": null,
+            "note": "One or both comparison lines missing/unmeasured in this assay"
+          }
+        ],
+        "category": "approved_mab_context",
+        "therapy_types": [
+          "mAb",
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:36Z"
+    },
+    {
+      "name": "profile:EGFR:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "data_insufficient",
+      "detail": {
+        "symbol": "EGFR",
+        "entrez": 1956,
+        "n_measured": 375,
+        "retrieved_at": "2026-10-28T00:46:36Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "EGFR",
+            "symbol": "EGFR",
+            "literature_direction": "A431 > MCF-7",
+            "assay_note": "flow; DOI 10.1177/39.8.1856460",
+            "high_sample": "A431_SKIN",
+            "low_sample": "MCF7_BREAST",
+            "high_value": null,
+            "low_value": -1.1456,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "data_insufficient",
+            "biology_match": null,
+            "note": "One or both comparison lines missing/unmeasured in this assay"
+          }
+        ],
+        "category": "approved_mab_context",
+        "therapy_types": [
+          "mAb",
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:37Z"
+    },
+    {
+      "name": "profile:PSMA:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "FOLH1",
+        "entrez": 2346,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:37Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "PSMA",
+            "symbol": "FOLH1",
+            "literature_direction": "LNCaP > PC3",
+            "assay_note": "intact-cell flow parental; DOI 10.3390/ma12050756; exclude engineered PC3-PIP",
+            "high_sample": "LNCAPCLONEFGC_PROSTATE",
+            "low_sample": "PC3_PROSTATE",
+            "high_value": 10.1125,
+            "low_value": 0.2154,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_radioligand_context",
+        "therapy_types": [
+          "radioligand",
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:37Z"
+    },
+    {
+      "name": "profile:PSMA:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "FOLH1",
+        "entrez": 2346,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:37Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "PSMA",
+            "symbol": "FOLH1",
+            "literature_direction": "LNCaP > PC3",
+            "assay_note": "intact-cell flow parental; DOI 10.3390/ma12050756; exclude engineered PC3-PIP",
+            "high_sample": "LNCAPCLONEFGC_PROSTATE",
+            "low_sample": "PC3_PROSTATE",
+            "high_value": 473.1661,
+            "low_value": 0.1089,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_radioligand_context",
+        "therapy_types": [
+          "radioligand",
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:37Z"
+    },
+    {
+      "name": "profile:PSMA:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "FOLH1",
+        "entrez": 2346,
+        "n_measured": 53,
+        "retrieved_at": "2026-10-28T00:46:37Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "PSMA",
+            "symbol": "FOLH1",
+            "literature_direction": "LNCaP > PC3",
+            "assay_note": "intact-cell flow parental; DOI 10.3390/ma12050756; exclude engineered PC3-PIP",
+            "high_sample": "LNCAPCLONEFGC_PROSTATE",
+            "low_sample": "PC3_PROSTATE",
+            "high_value": 5.7006,
+            "low_value": 0.2037,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_radioligand_context",
+        "therapy_types": [
+          "radioligand",
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:37Z"
+    },
+    {
+      "name": "profile:STEAP1:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "STEAP1",
+        "entrez": 26872,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:37Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "STEAP1",
+            "symbol": "STEAP1",
+            "literature_direction": "LNCaP > PC-3",
+            "assay_note": "Oslo-1 flow; DOI 10.1016/j.omto.2022.06.007",
+            "high_sample": "LNCAPCLONEFGC_PROSTATE",
+            "low_sample": "PC3_PROSTATE",
+            "high_value": 8.9447,
+            "low_value": 5.3895,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "TCE",
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:38Z"
+    },
+    {
+      "name": "profile:STEAP1:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "STEAP1",
+        "entrez": 26872,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:38Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "STEAP1",
+            "symbol": "STEAP1",
+            "literature_direction": "LNCaP > PC-3",
+            "assay_note": "Oslo-1 flow; DOI 10.1016/j.omto.2022.06.007",
+            "high_sample": "LNCAPCLONEFGC_PROSTATE",
+            "low_sample": "PC3_PROSTATE",
+            "high_value": 253.2304,
+            "low_value": 26.2166,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "TCE",
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:38Z"
+    },
+    {
+      "name": "profile:STEAP1:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "STEAP1",
+        "entrez": 26872,
+        "n_measured": 269,
+        "retrieved_at": "2026-10-28T00:46:38Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "STEAP1",
+            "symbol": "STEAP1",
+            "literature_direction": "LNCaP > PC-3",
+            "assay_note": "Oslo-1 flow; DOI 10.1016/j.omto.2022.06.007",
+            "high_sample": "LNCAPCLONEFGC_PROSTATE",
+            "low_sample": "PC3_PROSTATE",
+            "high_value": 2.796,
+            "low_value": 0.2577,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "TCE",
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:38Z"
+    },
+    {
+      "name": "profile:MSLN:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "MSLN",
+        "entrez": 10232,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:38Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "MSLN",
+            "symbol": "MSLN",
+            "literature_direction": "EKVX > A549",
+            "assay_note": "surface flow; DOI 10.1158/1078-0432.CCR-06-2161; A549 not absolute negative",
+            "high_sample": "EKVX_LUNG",
+            "low_sample": "A549_LUNG",
+            "high_value": 5.3045,
+            "low_value": 1.7754,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "CAR-T",
+          "ADC",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:39Z"
+    },
+    {
+      "name": "profile:MSLN:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "MSLN",
+        "entrez": 10232,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:39Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "MSLN",
+            "symbol": "MSLN",
+            "literature_direction": "EKVX > A549",
+            "assay_note": "surface flow; DOI 10.1158/1078-0432.CCR-06-2161; A549 not absolute negative",
+            "high_sample": "EKVX_LUNG",
+            "low_sample": "A549_LUNG",
+            "high_value": 28.0849,
+            "low_value": 1.4763,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "CAR-T",
+          "ADC",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:39Z"
+    },
+    {
+      "name": "profile:MSLN:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "data_insufficient",
+      "detail": {
+        "symbol": "MSLN",
+        "entrez": 10232,
+        "n_measured": 339,
+        "retrieved_at": "2026-10-28T00:46:39Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "MSLN",
+            "symbol": "MSLN",
+            "literature_direction": "EKVX > A549",
+            "assay_note": "surface flow; DOI 10.1158/1078-0432.CCR-06-2161; A549 not absolute negative",
+            "high_sample": "EKVX_LUNG",
+            "low_sample": "A549_LUNG",
+            "high_value": null,
+            "low_value": -0.745,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "data_insufficient",
+            "biology_match": null,
+            "note": "One or both comparison lines missing/unmeasured in this assay"
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "CAR-T",
+          "ADC",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:39Z"
+    },
+    {
+      "name": "profile:B7-H3:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "CD276",
+        "entrez": 80381,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:39Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "B7-H3",
+            "symbol": "CD276",
+            "literature_direction": "MDA-MB-231 > Raji",
+            "assay_note": "flow; DOI 10.3390/life12020157",
+            "high_sample": "MDAMB231_BREAST",
+            "low_sample": "RAJI_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": 5.0031,
+            "low_value": 0.4644,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:40Z"
+    },
+    {
+      "name": "profile:B7-H3:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "CD276",
+        "entrez": 80381,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:40Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "B7-H3",
+            "symbol": "CD276",
+            "literature_direction": "MDA-MB-231 > Raji",
+            "assay_note": "flow; DOI 10.3390/life12020157",
+            "high_sample": "MDAMB231_BREAST",
+            "low_sample": "RAJI_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": 10.9651,
+            "low_value": 0.088,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:40Z"
+    },
+    {
+      "name": "profile:B7-H3:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "data_insufficient",
+      "detail": {
+        "symbol": "CD276",
+        "entrez": 80381,
+        "n_measured": 375,
+        "retrieved_at": "2026-10-28T00:46:40Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "B7-H3",
+            "symbol": "CD276",
+            "literature_direction": "MDA-MB-231 > Raji",
+            "assay_note": "flow; DOI 10.3390/life12020157",
+            "high_sample": "MDAMB231_BREAST",
+            "low_sample": "RAJI_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": -0.0263,
+            "low_value": null,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "data_insufficient",
+            "biology_match": null,
+            "note": "One or both comparison lines missing/unmeasured in this assay"
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:40Z"
+    },
+    {
+      "name": "profile:TROP2:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "TACSTD2",
+        "entrez": 4070,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:40Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "TROP2",
+            "symbol": "TACSTD2",
+            "literature_direction": "MDA-MB-468 > BT-549",
+            "assay_note": "native baseline flow; DOI 10.1136/jitc-2025-012442",
+            "high_sample": "MDAMB468_BREAST",
+            "low_sample": "BT549_BREAST",
+            "high_value": 8.7912,
+            "low_value": 0.648,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_adc_context",
+        "therapy_types": [
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:40Z"
+    },
+    {
+      "name": "profile:TROP2:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "TACSTD2",
+        "entrez": 4070,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:40Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "TROP2",
+            "symbol": "TACSTD2",
+            "literature_direction": "MDA-MB-468 > BT-549",
+            "assay_note": "native baseline flow; DOI 10.1136/jitc-2025-012442",
+            "high_sample": "MDAMB468_BREAST",
+            "low_sample": "BT549_BREAST",
+            "high_value": 313.1664,
+            "low_value": 0.2209,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_adc_context",
+        "therapy_types": [
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:41Z"
+    },
+    {
+      "name": "profile:TROP2:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "TACSTD2",
+        "entrez": 4070,
+        "n_measured": 375,
+        "retrieved_at": "2026-10-28T00:46:41Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "TROP2",
+            "symbol": "TACSTD2",
+            "literature_direction": "MDA-MB-468 > BT-549",
+            "assay_note": "native baseline flow; DOI 10.1136/jitc-2025-012442",
+            "high_sample": "MDAMB468_BREAST",
+            "low_sample": "BT549_BREAST",
+            "high_value": 2.93,
+            "low_value": -0.72,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_adc_context",
+        "therapy_types": [
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:41Z"
+    },
+    {
+      "name": "profile:Nectin-4:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "NECTIN4",
+        "entrez": 81607,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:41Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "Nectin-4",
+            "symbol": "NECTIN4",
+            "literature_direction": "MCF-7 > MDA-MB-231",
+            "assay_note": "flow; DOI 10.1186/1471-2407-7-73",
+            "high_sample": "MCF7_BREAST",
+            "low_sample": "MDAMB231_BREAST",
+            "high_value": 3.7627,
+            "low_value": 0.1633,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_adc_context",
+        "therapy_types": [
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:41Z"
+    },
+    {
+      "name": "profile:Nectin-4:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "NECTIN4",
+        "entrez": 81607,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:41Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "Nectin-4",
+            "symbol": "NECTIN4",
+            "literature_direction": "MCF-7 > MDA-MB-231",
+            "assay_note": "flow; DOI 10.1186/1471-2407-7-73",
+            "high_sample": "MCF7_BREAST",
+            "low_sample": "MDAMB231_BREAST",
+            "high_value": 8.103,
+            "low_value": 0.0558,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_adc_context",
+        "therapy_types": [
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:42Z"
+    },
+    {
+      "name": "profile:Nectin-4:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "data_insufficient",
+      "detail": {
+        "symbol": "NECTIN4",
+        "entrez": 81607,
+        "n_measured": 295,
+        "retrieved_at": "2026-10-28T00:46:42Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "Nectin-4",
+            "symbol": "NECTIN4",
+            "literature_direction": "MCF-7 > MDA-MB-231",
+            "assay_note": "flow; DOI 10.1186/1471-2407-7-73",
+            "high_sample": "MCF7_BREAST",
+            "low_sample": "MDAMB231_BREAST",
+            "high_value": 0.1812,
+            "low_value": null,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "data_insufficient",
+            "biology_match": null,
+            "note": "One or both comparison lines missing/unmeasured in this assay"
+          }
+        ],
+        "category": "approved_adc_context",
+        "therapy_types": [
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:42Z"
+    },
+    {
+      "name": "profile:CD19:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "CD19",
+        "entrez": 930,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:42Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "CD19",
+            "symbol": "CD19",
+            "literature_direction": "Raji > K562",
+            "assay_note": "flow; DOI 10.3390/ijms18122773",
+            "high_sample": "RAJI_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "low_sample": "K562_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": 6.8979,
+            "low_value": 2.7514,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_cell_therapy",
+        "therapy_types": [
+          "CAR-T",
+          "TCE",
+          "mAb"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:42Z"
+    },
+    {
+      "name": "profile:CD19:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "CD19",
+        "entrez": 930,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:42Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "CD19",
+            "symbol": "CD19",
+            "literature_direction": "Raji > K562",
+            "assay_note": "flow; DOI 10.3390/ijms18122773",
+            "high_sample": "RAJI_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "low_sample": "K562_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": 105.2103,
+            "low_value": 1.6839,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_cell_therapy",
+        "therapy_types": [
+          "CAR-T",
+          "TCE",
+          "mAb"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:42Z"
+    },
+    {
+      "name": "profile:CD19:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "data_insufficient",
+      "detail": {
+        "symbol": "CD19",
+        "entrez": 930,
+        "n_measured": 54,
+        "retrieved_at": "2026-10-28T00:46:42Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "CD19",
+            "symbol": "CD19",
+            "literature_direction": "Raji > K562",
+            "assay_note": "flow; DOI 10.3390/ijms18122773",
+            "high_sample": "RAJI_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "low_sample": "K562_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": null,
+            "low_value": -0.7654,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "data_insufficient",
+            "biology_match": null,
+            "note": "One or both comparison lines missing/unmeasured in this assay"
+          }
+        ],
+        "category": "approved_cell_therapy",
+        "therapy_types": [
+          "CAR-T",
+          "TCE",
+          "mAb"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:43Z"
+    },
+    {
+      "name": "profile:CD20:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "MS4A1",
+        "entrez": 931,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:43Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "CD20",
+            "symbol": "MS4A1",
+            "literature_direction": "Raji > Jurkat",
+            "assay_note": "flow; DOI 10.7717/peerj.31",
+            "high_sample": "RAJI_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "low_sample": "JURKAT_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": 8.4767,
+            "low_value": 0.142,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_mab_context",
+        "therapy_types": [
+          "mAb",
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:43Z"
+    },
+    {
+      "name": "profile:CD20:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "MS4A1",
+        "entrez": 931,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:43Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "CD20",
+            "symbol": "MS4A1",
+            "literature_direction": "Raji > Jurkat",
+            "assay_note": "flow; DOI 10.7717/peerj.31",
+            "high_sample": "RAJI_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "low_sample": "JURKAT_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": 144.2112,
+            "low_value": 0.0203,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_mab_context",
+        "therapy_types": [
+          "mAb",
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:43Z"
+    },
+    {
+      "name": "profile:CD20:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "data_insufficient",
+      "detail": {
+        "symbol": "MS4A1",
+        "entrez": 931,
+        "n_measured": 81,
+        "retrieved_at": "2026-10-28T00:46:43Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "CD20",
+            "symbol": "MS4A1",
+            "literature_direction": "Raji > Jurkat",
+            "assay_note": "flow; DOI 10.7717/peerj.31",
+            "high_sample": "RAJI_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "low_sample": "JURKAT_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": null,
+            "low_value": -0.5239,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "data_insufficient",
+            "biology_match": null,
+            "note": "One or both comparison lines missing/unmeasured in this assay"
+          }
+        ],
+        "category": "approved_mab_context",
+        "therapy_types": [
+          "mAb",
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:44Z"
+    },
+    {
+      "name": "profile:BCMA:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "data_insufficient",
+      "detail": {
+        "symbol": "TNFRSF17",
+        "entrez": 608,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:44Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "BCMA",
+            "symbol": "TNFRSF17",
+            "literature_direction": "RPMI8226 > CCRF-CEM",
+            "assay_note": "live-cell flow; DOI 10.1158/1078-0432.CCR-12-2422",
+            "high_sample": "RPMI8226_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "low_sample": "CCRCEM_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": 5.4069,
+            "low_value": null,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "data_insufficient",
+            "biology_match": null,
+            "note": "One or both comparison lines missing/unmeasured in this assay"
+          }
+        ],
+        "category": "approved_cell_therapy",
+        "therapy_types": [
+          "CAR-T",
+          "TCE",
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:44Z"
+    },
+    {
+      "name": "profile:BCMA:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "data_insufficient",
+      "detail": {
+        "symbol": "TNFRSF17",
+        "entrez": 608,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:44Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "BCMA",
+            "symbol": "TNFRSF17",
+            "literature_direction": "RPMI8226 > CCRF-CEM",
+            "assay_note": "live-cell flow; DOI 10.1158/1078-0432.CCR-12-2422",
+            "high_sample": "RPMI8226_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "low_sample": "CCRCEM_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": 30.8564,
+            "low_value": null,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "data_insufficient",
+            "biology_match": null,
+            "note": "One or both comparison lines missing/unmeasured in this assay"
+          }
+        ],
+        "category": "approved_cell_therapy",
+        "therapy_types": [
+          "CAR-T",
+          "TCE",
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:44Z"
+    },
+    {
+      "name": "profile:BCMA:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "data_insufficient",
+      "detail": {
+        "symbol": "TNFRSF17",
+        "entrez": 608,
+        "n_measured": 18,
+        "retrieved_at": "2026-10-28T00:46:44Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "BCMA",
+            "symbol": "TNFRSF17",
+            "literature_direction": "RPMI8226 > CCRF-CEM",
+            "assay_note": "live-cell flow; DOI 10.1158/1078-0432.CCR-12-2422",
+            "high_sample": "RPMI8226_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "low_sample": "CCRCEM_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": null,
+            "low_value": null,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "data_insufficient",
+            "biology_match": null,
+            "note": "One or both comparison lines missing/unmeasured in this assay"
+          }
+        ],
+        "category": "approved_cell_therapy",
+        "therapy_types": [
+          "CAR-T",
+          "TCE",
+          "ADC"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:45Z"
+    },
+    {
+      "name": "profile:GPRC5D:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "GPRC5D",
+        "entrez": 55507,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:45Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "GPRC5D",
+            "symbol": "GPRC5D",
+            "literature_direction": "RPMI8226 > Raji",
+            "assay_note": "flow; DOI 10.1182/bloodadvances.2020003805",
+            "high_sample": "RPMI8226_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "low_sample": "RAJI_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": 2.2256,
+            "low_value": 0.0355,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_cell_therapy",
+        "therapy_types": [
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:45Z"
+    },
+    {
+      "name": "profile:GPRC5D:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "GPRC5D",
+        "entrez": 55507,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:45Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "GPRC5D",
+            "symbol": "GPRC5D",
+            "literature_direction": "RPMI8226 > Raji",
+            "assay_note": "flow; DOI 10.1182/bloodadvances.2020003805",
+            "high_sample": "RPMI8226_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "low_sample": "RAJI_HAEMATOPOIETIC_AND_LYMPHOID_TISSUE",
+            "high_value": 2.0435,
+            "low_value": 0.013,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities."
+          }
+        ],
+        "category": "approved_cell_therapy",
+        "therapy_types": [
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:45Z"
+    },
+    {
+      "name": "profile:GPRC5D:ccle_2019_protein",
+      "status": "data_insufficient",
+      "data_fidelity": "pass",
+      "biology_concordance": "n/a",
+      "detail": {
+        "symbol": "GPRC5D",
+        "entrez": 55507,
+        "n_measured": 0,
+        "retrieved_at": "2026-10-28T00:46:45Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [],
+        "category": "approved_cell_therapy",
+        "therapy_types": [
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:45Z"
+    },
+    {
+      "name": "profile:DLL3:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "DLL3",
+        "entrez": 10683,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:45Z",
+        "unit": "log2(TPM+1)",
+        "biology": [
+          {
+            "target": "DLL3",
+            "symbol": "DLL3",
+            "literature_direction": "NCI-H82 > A549",
+            "assay_note": "antibody radiobinding; DOI 10.1158/0008-5472.CAN-17-0299",
+            "high_sample": "NCIH82_LUNG",
+            "low_sample": "A549_LUNG",
+            "high_value": 5.0787,
+            "low_value": 2.6276,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities.",
+            "mid_sample": "NCIH69_LUNG",
+            "mid_value": 4.4622,
+            "biology_match_mid": true
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "TCE",
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:46Z"
+    },
+    {
+      "name": "profile:DLL3:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "symbol": "DLL3",
+        "entrez": 10683,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:46Z",
+        "unit": "RPKM",
+        "biology": [
+          {
+            "target": "DLL3",
+            "symbol": "DLL3",
+            "literature_direction": "NCI-H82 > A549",
+            "assay_note": "antibody radiobinding; DOI 10.1158/0008-5472.CAN-17-0299",
+            "high_sample": "NCIH82_LUNG",
+            "low_sample": "A549_LUNG",
+            "high_value": 18.1986,
+            "low_value": 2.2507,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "pass_direction",
+            "biology_match": true,
+            "note": "Literature surface assay direction vs this molecular assay. Mismatch does not imply data corruption; assays measure different quantities.",
+            "mid_sample": "NCIH69_LUNG",
+            "mid_value": 11.0044,
+            "biology_match_mid": true
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "TCE",
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:46Z"
+    },
+    {
+      "name": "profile:DLL3:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "data_insufficient",
+      "detail": {
+        "symbol": "DLL3",
+        "entrez": 10683,
+        "n_measured": 124,
+        "retrieved_at": "2026-10-28T00:46:46Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [
+          {
+            "target": "DLL3",
+            "symbol": "DLL3",
+            "literature_direction": "NCI-H82 > A549",
+            "assay_note": "antibody radiobinding; DOI 10.1158/0008-5472.CAN-17-0299",
+            "high_sample": "NCIH82_LUNG",
+            "low_sample": "A549_LUNG",
+            "high_value": null,
+            "low_value": null,
+            "data_fidelity": "n/a \u2014 biological direction check",
+            "status": "data_insufficient",
+            "biology_match": null,
+            "note": "One or both comparison lines missing/unmeasured in this assay"
+          }
+        ],
+        "category": "clinical_development",
+        "therapy_types": [
+          "TCE",
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:46Z"
+    },
+    {
+      "name": "profile:CEA:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "n/a",
+      "detail": {
+        "symbol": "CEACAM5",
+        "entrez": 1048,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:46Z",
+        "unit": "log2(TPM+1)",
+        "biology": [],
+        "category": "clinical_development",
+        "therapy_types": [
+          "TCE",
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:46Z"
+    },
+    {
+      "name": "profile:CEA:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "n/a",
+      "detail": {
+        "symbol": "CEACAM5",
+        "entrez": 1048,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:46Z",
+        "unit": "RPKM",
+        "biology": [],
+        "category": "clinical_development",
+        "therapy_types": [
+          "TCE",
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:47Z"
+    },
+    {
+      "name": "profile:CEA:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "n/a",
+      "detail": {
+        "symbol": "CEACAM5",
+        "entrez": 1048,
+        "n_measured": 313,
+        "retrieved_at": "2026-10-28T00:46:47Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [],
+        "category": "clinical_development",
+        "therapy_types": [
+          "TCE",
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:47Z"
+    },
+    {
+      "name": "profile:FAP:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "n/a",
+      "detail": {
+        "symbol": "FAP",
+        "entrez": 2191,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:47Z",
+        "unit": "log2(TPM+1)",
+        "biology": [],
+        "category": "research_stromal",
+        "therapy_types": [
+          "radioligand",
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:47Z"
+    },
+    {
+      "name": "profile:FAP:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "n/a",
+      "detail": {
+        "symbol": "FAP",
+        "entrez": 2191,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:47Z",
+        "unit": "RPKM",
+        "biology": [],
+        "category": "research_stromal",
+        "therapy_types": [
+          "radioligand",
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:48Z"
+    },
+    {
+      "name": "profile:FAP:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "n/a",
+      "detail": {
+        "symbol": "FAP",
+        "entrez": 2191,
+        "n_measured": 258,
+        "retrieved_at": "2026-10-28T00:46:48Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [],
+        "category": "research_stromal",
+        "therapy_types": [
+          "radioligand",
+          "CAR-T",
+          "TCE"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:48Z"
+    },
+    {
+      "name": "profile:CLDN18.2:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "n/a",
+      "detail": {
+        "symbol": "CLDN18",
+        "entrez": 51208,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T00:46:48Z",
+        "unit": "log2(TPM+1)",
+        "biology": [],
+        "category": "approved_mab_context",
+        "therapy_types": [
+          "mAb",
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:48Z"
+    },
+    {
+      "name": "profile:CLDN18.2:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "n/a",
+      "detail": {
+        "symbol": "CLDN18",
+        "entrez": 51208,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T00:46:48Z",
+        "unit": "RPKM",
+        "biology": [],
+        "category": "approved_mab_context",
+        "therapy_types": [
+          "mAb",
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:48Z"
+    },
+    {
+      "name": "profile:CLDN18.2:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "n/a",
+      "detail": {
+        "symbol": "CLDN18",
+        "entrez": 51208,
+        "n_measured": 89,
+        "retrieved_at": "2026-10-28T00:46:48Z",
+        "unit": "normalized relative log2 (whole-cell MS)",
+        "biology": [],
+        "category": "approved_mab_context",
+        "therapy_types": [
+          "mAb",
+          "ADC",
+          "CAR-T"
+        ],
+        "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
+      },
+      "recorded_at": "2026-10-28T00:46:49Z"
+    },
+    {
+      "name": "profiles:GD2",
+      "status": "held",
+      "data_fidelity": "n/a",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "reason": "glycolipid \u2014 no gene-level expression quantification"
+      },
+      "recorded_at": "2026-10-28T00:46:49Z"
+    }
+  ],
+  "summary": {
+    "pass": 47,
+    "mismatch": 0,
+    "fetch_failed": 0,
+    "data_insufficient": 1,
+    "held": 1,
+    "pending": 0,
+    "total": 49,
+    "fidelity_pass": 48,
+    "fidelity_fail": 0,
+    "biology_pass_direction": 26,
+    "biology_mismatch_direction": 1
+  }
+}
