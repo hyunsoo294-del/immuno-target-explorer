@@ -204,10 +204,20 @@ def main() -> None:
             st.session_state.top20 = None
 
     st.write("Quick start:")
-    qcols = st.columns(len(QUICK_START))
-    for i, name in enumerate(QUICK_START):
-        if qcols[i].button(name, key=f"qs_{name}"):
-            resolve_and_store(name)
+    qs1, qs2 = st.columns([3, 1])
+    with qs1:
+        qs_pick = st.selectbox("Quick target", QUICK_START, key="qs_pick")
+    with qs2:
+        st.write("")
+        st.write("")
+        if st.button("Load quick target", key="qs_load"):
+            resolve_and_store(qs_pick)
+    # Compact secondary chips (2 rows) for mouse users
+    for row in (QUICK_START[:5], QUICK_START[5:]):
+        cols = st.columns(len(row))
+        for i, name in enumerate(row):
+            if cols[i].button(name, key=f"qs_{name}"):
+                resolve_and_store(name)
 
     resolved = st.session_state.resolved
     if not resolved:
