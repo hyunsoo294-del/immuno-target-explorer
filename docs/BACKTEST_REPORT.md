@@ -44,3 +44,9 @@ Screenshots: `/opt/cursor/artifacts/screenshots/bt_*.png`
 - Full TISCH2/UCSC matrix marker computation without local H5AD was not marked pass.
 - Statistical significance of Top 20 was not claimed.
 - Approval-status of therapies was not re-checked against regulators this run.
+
+## 5. Single-cell analysis (added after backtest)
+
+- UCSC `head-neck` live matrix analysis: status ok, barcode join, composition + marker stats + coexpression.
+- Playwright public UI: Run single-cell analysis → n_total / lineage / markers / coexpression pass.
+- Analyzable datasets: head-neck, quake-gbm, gbm, colorectal-cancer, human-pancreas (first run caches matrix).

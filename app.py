@@ -22,13 +22,13 @@ from profiler.cell_lines import (
     literature_direction_check,
 )
 from profiler.cbioportal import CELL_LINE_ASSAYS, TCGA_STUDIES
-from profiler.charts_ui import bar_cell_lines, box_by_cancer
+from profiler.charts_ui import bar_cell_lines, box_by_cancer, heatmap_markers
 from profiler.exports import df_to_csv_bytes, to_json_bytes
 from profiler.gene_resolution import MHCII_LOCI, PRIORITY_TAAS, resolve_target
 from profiler.single_cell import (
     DEFAULT_MARKERS,
     LINEAGE_GROUPS,
-    demo_analysis_bundle,
+    analyze_ucsc_dataset,
     list_datasets,
     try_ucsc_index,
 )
@@ -468,33 +468,152 @@ def main() -> None:
     # ----- Single-cell -----
     elif section == "Single-cell lab":
         st.subheader("Public single-cell studies")
-        st.caption("UCSC Cell Browser · TISCH2 catalog. Full matrices are not fabricated.")
-        ucsc = try_ucsc_index()
-        st.write(f"UCSC index probe: **{ucsc.get('status')}**", ucsc)
-        cancer_f = st.selectbox("Cancer filter", ["All"] + list(TCGA_STUDIES.keys()), key="sc_cancer")
-        datasets = list_datasets(None if cancer_f == "All" else cancer_f)
-        st.dataframe(pd.DataFrame(datasets), use_container_width=True, hide_index=True)
-        ds_id = st.selectbox("Select dataset", [d["id"] for d in datasets], format_func=lambda i: next(d["title"] for d in datasets if d["id"] == i))
-        lineages = st.multiselect("Lineages (raw annotation filter — no auto cluster mapping)", LINEAGE_GROUPS, default=["T", "B", "DC"])
-        markers = st.multiselect(
-            "Markers",
-            options=list(DEFAULT_MARKERS.values()) + MHCII_LOCI,
-            default=["PDCD1", "TNFRSF9", "CD274", "CD40", "CLEC9A"],
+        st.caption(
+            "UCSC Cell Browser matrices are downloaded once to local cache, then selected gene rows are scanned. "
+            "Values are never fabricated. RNA>threshold ≠ protein-positive."
         )
-        st.caption("MHCII: pick specific HLA loci. Threshold default 0 = RNA>0, not protein-positive.")
-        if st.button("Prepare analysis", key="sc_run"):
-            st.session_state.sc_result = demo_analysis_bundle(ds_id, markers)
-            st.session_state.sc_result["requested_lineages"] = lineages
-        if st.session_state.sc_result:
+        ucsc = try_ucsc_index()
+        st.write(f"UCSC index probe: **{ucsc.get('status')}** · datasets={ucsc.get('n')}")
+        cancer_f = st.selectbox("Cancer filter", ["All", "HNSC", "GBM", "COADREAD", "PAAD", "BRCA", "PRAD", "LUAD"], key="sc_cancer")
+        datasets = list_datasets(None if cancer_f == "All" else cancer_f)
+        if not datasets:
+            st.warning("No curated datasets for this cancer filter.")
+        else:
+            show_cols = [c for c in ["id", "title", "cancer", "n_cells_approx", "matrix_mb_approx", "analyzable", "source", "format", "notes"] if c in pd.DataFrame(datasets).columns]
+            st.dataframe(pd.DataFrame(datasets)[show_cols], use_container_width=True, hide_index=True)
+            ds_id = st.selectbox(
+                "Select dataset",
+                [d["id"] for d in datasets],
+                format_func=lambda i: next(d["title"] + (" ✅" if d.get("analyzable") else " (catalog only)") for d in datasets if d["id"] == i),
+            )
+            ds_meta = next(d for d in datasets if d["id"] == ds_id)
+            if ds_meta.get("matrix_mb_approx"):
+                st.info(f"First run downloads ~{ds_meta['matrix_mb_approx']} MB expression matrix to cache, then extracts only selected genes.")
+
+            lineages = st.multiselect(
+                "Lineages to include (keyword-mapped from author annotations; numeric clusters not auto-labeled)",
+                LINEAGE_GROUPS,
+                default=["T", "B", "DC", "NK", "Myeloid", "Stromal", "Epithelial/tumor"],
+            )
+            marker_opts = sorted(set(list(DEFAULT_MARKERS.values()) + MHCII_LOCI + [
+                "CD3E", "CD8A", "MS4A1", "CD19", "FOXP3", "NCAM1", "ITGAX", "CSF1R", "EPCAM", "COL1A1", "PECAM1",
+                "FOLH1", "ERBB2", "EGFR", "STEAP1", "MSLN", "CD276", "TACSTD2", "NECTIN4", "CEACAM5", "FAP", "CLDN18",
+            ]))
+            # Prefer current TAA if resolved
+            default_markers = ["PDCD1", "TNFRSF9", "CD274", "CD40", "CLEC9A", "CD3E", "CD8A"]
+            if resolved and resolved.get("official_symbol") and resolved["official_symbol"] not in default_markers:
+                default_markers = [resolved["official_symbol"]] + default_markers
+            markers = st.multiselect("Markers", options=marker_opts, default=[m for m in default_markers if m in marker_opts])
+            thr = st.number_input("RNA threshold (native units)", min_value=0.0, value=0.0, step=0.1, key="sc_thr")
+            anchor = st.selectbox("Coexpression anchor", options=markers or ["PDCD1"], key="sc_anchor")
+            st.caption("MHCII is multi-gene — pick HLA loci explicitly. Threshold positivity is RNA-only.")
+
+            if st.button("Run single-cell analysis", type="primary", key="sc_run"):
+                if not markers:
+                    st.error("Select at least one marker.")
+                else:
+                    prog = st.empty()
+                    def _p(msg: str) -> None:
+                        prog.info(msg)
+                    with st.status("Running UCSC matrix analysis…", expanded=True) as status:
+                        t0 = time.time()
+                        res = analyze_ucsc_dataset(
+                            ds_id,
+                            markers,
+                            lineages=lineages or None,
+                            threshold=float(thr),
+                            anchor=anchor,
+                            progress=_p,
+                        )
+                        st.session_state.sc_result = res
+                        status.update(
+                            label=f"{res.get('status')} in {time.time()-t0:.1f}s",
+                            state="complete" if res.get("status") == "ok" else "error",
+                        )
+                    prog.empty()
+
             res = st.session_state.sc_result
-            if res.get("status") == "awaiting_matrix":
-                st.warning(res.get("message"))
-                st.json({k: res[k] for k in res if k != "dataset"})
-            else:
-                st.json(res)
-            ds = next((d for d in datasets if d["id"] == ds_id), {})
-            st.markdown("**Provenance**")
-            st.write(ds)
+            if res:
+                if res.get("status") == "awaiting_matrix":
+                    st.warning(res.get("message"))
+                elif res.get("status") != "ok":
+                    st.markdown(
+                        f"<div class='failbox'>Analysis failed: {html.escape(str(res.get('error') or res.get('status')))}</div>",
+                        unsafe_allow_html=True,
+                    )
+                else:
+                    st.markdown(
+                        f"<div class='okbox'>n_total={res.get('n_cells_total')} · selected={res.get('n_cells_selected')} · "
+                        f"annotation=<b>{html.escape(str(res.get('annotation_column')))}</b> · "
+                        f"align={html.escape(str(res.get('barcode_align')))} · retrieved {html.escape(str(res.get('retrieved_at')))}</div>",
+                        unsafe_allow_html=True,
+                    )
+                    st.caption(res.get("mapping_note") or "")
+                    st.caption(res.get("patient_note") or "")
+
+                    st.markdown("#### TME / lineage composition")
+                    comp = res.get("composition") or {}
+                    st.write(
+                        f"Immune cells: **{comp.get('n_immune_cells')}** / {comp.get('n_cells_total')} "
+                        f"({comp.get('pct_immune_of_all'):.1f}% of all cells)" if comp.get("pct_immune_of_all") is not None else "Immune share unavailable"
+                    )
+                    c1, c2 = st.columns(2)
+                    with c1:
+                        st.markdown("**By lineage (all cells denominator)**")
+                        st.dataframe(pd.DataFrame(comp.get("by_lineage") or []), use_container_width=True, hide_index=True)
+                    with c2:
+                        st.markdown("**Immune lineage share (immune denominator)**")
+                        st.dataframe(pd.DataFrame(comp.get("immune_lineage_share") or []), use_container_width=True, hide_index=True)
+                    with st.expander("Author annotations (with lineage map)"):
+                        st.dataframe(pd.DataFrame(comp.get("by_annotation") or []), use_container_width=True, hide_index=True)
+                    for note in comp.get("denominator_notes") or []:
+                        st.caption("• " + note)
+
+                    st.markdown("#### Marker expression in selected cells")
+                    stats_df = pd.DataFrame(res.get("marker_stats") or [])
+                    st.dataframe(stats_df, use_container_width=True, hide_index=True)
+                    ge = res.get("gene_extract") or {}
+                    if ge.get("genes_missing"):
+                        st.warning("Not measured in matrix: " + ", ".join(ge["genes_missing"]))
+
+                    by_lin = pd.DataFrame(res.get("marker_by_lineage") or [])
+                    if not by_lin.empty:
+                        pivot = by_lin.pivot_table(index="lineage", columns="symbol", values="mean", aggfunc="first")
+                        st.plotly_chart(
+                            heatmap_markers(pivot, f"Mean expression by lineage (threshold={res.get('threshold')})"),
+                            use_container_width=True,
+                        )
+                        pct = by_lin.pivot_table(index="lineage", columns="symbol", values="pct_gt_thr", aggfunc="first")
+                        st.markdown("**% cells RNA > threshold by lineage**")
+                        st.dataframe(pct, use_container_width=True)
+
+                    st.markdown(f"#### Same-cell coexpression vs anchor `{res.get('anchor')}`")
+                    co = res.get("coexpression_vs_anchor") or {}
+                    co_rows = [{"other": k, **(v if isinstance(v, dict) else {"value": v})} for k, v in co.items()]
+                    st.dataframe(pd.DataFrame(co_rows), use_container_width=True, hide_index=True)
+                    st.caption(res.get("threshold_meaning") or "")
+
+                    for lim in res.get("limits") or []:
+                        st.caption("• " + lim)
+
+                    e1, e2 = st.columns(2)
+                    with e1:
+                        st.download_button(
+                            "CSV marker stats",
+                            data=df_to_csv_bytes(stats_df, {"dataset": ds_id, "threshold": res.get("threshold")}),
+                            file_name=f"{ds_id}_marker_stats.csv",
+                            mime="text/csv",
+                        )
+                    with e2:
+                        st.download_button(
+                            "JSON full result",
+                            data=to_json_bytes(res, {"dataset": ds_id, "markers": markers}),
+                            file_name=f"{ds_id}_singlecell.json",
+                            mime="application/json",
+                        )
+
+                st.markdown("**Provenance**")
+                st.write(res.get("dataset") or ds_meta)
 
     # ----- Evidence -----
     elif section == "Evidence & limits":
