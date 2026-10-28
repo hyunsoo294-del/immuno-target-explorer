@@ -244,21 +244,23 @@ def main() -> None:
             unsafe_allow_html=True,
         )
 
-    tabs = st.tabs(
+    section = st.radio(
+        "Section",
         [
             "Target expression",
             "Cancer cell lines",
             "Single-cell lab",
             "Evidence & limits",
             "Validation",
-        ]
+        ],
+        horizontal=True,
+        key="main_section",
     )
 
-    # ----- Tab 1: Target expression -----
-    with tabs[0]:
+    # ----- Target expression -----
+    if section == "Target expression":
         st.subheader("Cancer-type RNA / RPPA (TCGA PanCancer Atlas 2018)")
         st.caption("Bulk tumor mixed-tissue signal. RNA and RPPA are never merged onto one axis.")
-        cancer_options = ["All"] + list(TCGA_STUDIES.keys())
         pick = st.multiselect("Cancers", options=list(TCGA_STUDIES.keys()), default=["BRCA", "LUAD", "PRAD", "PAAD", "OV"])
         if st.button("Load cancer expression", key="load_bulk"):
             with st.status("Querying cBioPortal per study…", expanded=True) as status:
@@ -275,7 +277,6 @@ def main() -> None:
         bulk = st.session_state.bulk
         if bulk:
             summary = pd.DataFrame(bulk["summary_rows"])
-            rna = summary[(summary.get("assay") == "RNA") & (summary.get("level").isna() if "level" in summary.columns else True)]
             if "level" in summary.columns:
                 rna = summary[(summary["assay"] == "RNA") & (summary["level"].isna() | (summary["level"] != "subtype"))]
             else:
@@ -333,8 +334,8 @@ def main() -> None:
                         mime="text/csv",
                     )
 
-    # ----- Tab 2: Cancer cell lines -----
-    with tabs[1]:
+    # ----- Cancer cell lines -----
+    elif section == "Cancer cell lines":
         st.markdown(
             "<div class='okbox'><b>Human-derived cancer cell lines</b> — cultured models via cBioPortal "
             "DepMap/CCLE. Not patient tumors.</div>",
@@ -349,12 +350,14 @@ def main() -> None:
         )
         if assay_key != st.session_state.cell_assay:
             st.session_state.selected_lines = []
-        if st.button("Load cell-line expression", key="load_cl") or (
+        if st.button("Load cell-line expression", key="load_cl"):
+            ensure_cell_lines(assay_key)
+        elif (
             st.session_state.cell_lines
             and st.session_state.cell_lines.get("entrez_gene_id") == resolved.get("entrez_gene_id")
             and st.session_state.cell_lines.get("assay_key") == assay_key
         ):
-            ensure_cell_lines(assay_key)
+            pass  # keep cached
 
         bundle = st.session_state.cell_lines
         if not bundle:
@@ -375,7 +378,7 @@ def main() -> None:
             with f1:
                 qline = st.text_input("Filter name / DepMap ID")
             with f2:
-                cancers = ["All"] + sorted({c for c in df.get("cancer_type", pd.Series(dtype=str)).dropna().unique()})
+                cancers = ["All"] + sorted({c for c in df.get("cancer_type", pd.Series(dtype=str)).dropna().unique() if c})
                 cancer_f = st.selectbox("Cancer/lineage", cancers)
             with f3:
                 sort_by = st.selectbox("Sort", ["value high→low", "value low→high", "name"])
@@ -390,7 +393,6 @@ def main() -> None:
             else:
                 filtered = filtered.sort_values("sampleId")
 
-            # pagination 25
             page_size = 25
             n_pages = max(1, (len(filtered) + page_size - 1) // page_size)
             page = st.number_input("Page", min_value=1, max_value=n_pages, value=1)
@@ -463,8 +465,8 @@ def main() -> None:
                     mime="application/json",
                 )
 
-    # ----- Tab 3: Single-cell -----
-    with tabs[2]:
+    # ----- Single-cell -----
+    elif section == "Single-cell lab":
         st.subheader("Public single-cell studies")
         st.caption("UCSC Cell Browser · TISCH2 catalog. Full matrices are not fabricated.")
         ucsc = try_ucsc_index()
@@ -494,8 +496,8 @@ def main() -> None:
             st.markdown("**Provenance**")
             st.write(ds)
 
-    # ----- Tab 4: Evidence -----
-    with tabs[3]:
+    # ----- Evidence -----
+    elif section == "Evidence & limits":
         st.subheader("Evidence & interpretation limits")
         st.markdown(
             """
@@ -519,10 +521,17 @@ def main() -> None:
                 mime="application/json",
             )
 
-    # ----- Tab 5: Validation -----
-    with tabs[4]:
+    # ----- Validation -----
+    elif section == "Validation":
         st.subheader("Validation")
         st.caption("Real check log only. Data fidelity and biology concordance are separate columns. No fake PASS.")
+        # Preload latest on-disk results for transparency
+        latest = Path("validation_results/profiles_latest.json")
+        if latest.exists() and st.session_state.validation_run is None:
+            st.info("Disk results available from CLI runs. Click below to re-run live, or expand to view last profiles summary.")
+            with st.expander("Last profiles_latest.json summary"):
+                prev = json.loads(latest.read_text(encoding="utf-8"))
+                st.json(prev.get("summary"))
         if st.button("Run validation suite (aliases + HER2 regression + 17-target profiles)", type="primary"):
             progress = st.empty()
             def _prog(msg: str) -> None:
