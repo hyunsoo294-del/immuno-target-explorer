@@ -1,0 +1,676 @@
+{
+  "run_id": "a67ac0fb",
+  "started_at": "2026-10-28T04:04:45Z",
+  "finished_at": null,
+  "app_version": "0.2.0",
+  "checks": [
+    {
+      "name": "alias:Mesothelin",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "Mesothelin",
+        "expected_symbol": "MSLN",
+        "resolved": {
+          "query": "Mesothelin",
+          "normalized_alias": "MESOTHELIN",
+          "official_symbol": "MSLN",
+          "entrez_gene_id": 10232,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 10232,
+            "hugoGeneSymbol": "MSLN",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:TROP-2",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "TROP-2",
+        "expected_symbol": "TACSTD2",
+        "resolved": {
+          "query": "TROP-2",
+          "normalized_alias": "TROP-2",
+          "official_symbol": "TACSTD2",
+          "entrez_gene_id": 4070,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 4070,
+            "hugoGeneSymbol": "TACSTD2",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:Nectin-4",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "Nectin-4",
+        "expected_symbol": "NECTIN4",
+        "resolved": {
+          "query": "Nectin-4",
+          "normalized_alias": "NECTIN-4",
+          "official_symbol": "NECTIN4",
+          "entrez_gene_id": 81607,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 81607,
+            "hugoGeneSymbol": "NECTIN4",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:PVRL4",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "PVRL4",
+        "expected_symbol": "NECTIN4",
+        "resolved": {
+          "query": "PVRL4",
+          "normalized_alias": "PVRL4",
+          "official_symbol": "NECTIN4",
+          "entrez_gene_id": 81607,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 81607,
+            "hugoGeneSymbol": "NECTIN4",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:CD20",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "CD20",
+        "expected_symbol": "MS4A1",
+        "resolved": {
+          "query": "CD20",
+          "normalized_alias": "CD20",
+          "official_symbol": "MS4A1",
+          "entrez_gene_id": 931,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 931,
+            "hugoGeneSymbol": "MS4A1",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:BCMA",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "BCMA",
+        "expected_symbol": "TNFRSF17",
+        "resolved": {
+          "query": "BCMA",
+          "normalized_alias": "BCMA",
+          "official_symbol": "TNFRSF17",
+          "entrez_gene_id": 608,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 608,
+            "hugoGeneSymbol": "TNFRSF17",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:CD269",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "CD269",
+        "expected_symbol": "TNFRSF17",
+        "resolved": {
+          "query": "CD269",
+          "normalized_alias": "CD269",
+          "official_symbol": "TNFRSF17",
+          "entrez_gene_id": 608,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 608,
+            "hugoGeneSymbol": "TNFRSF17",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:CEA",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "CEA",
+        "expected_symbol": "CEACAM5",
+        "resolved": {
+          "query": "CEA",
+          "normalized_alias": "CEA",
+          "official_symbol": "CEACAM5",
+          "entrez_gene_id": 1048,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 1048,
+            "hugoGeneSymbol": "CEACAM5",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:CD66e",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "CD66e",
+        "expected_symbol": "CEACAM5",
+        "resolved": {
+          "query": "CD66e",
+          "normalized_alias": "CD66E",
+          "official_symbol": "CEACAM5",
+          "entrez_gene_id": 1048,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 1048,
+            "hugoGeneSymbol": "CEACAM5",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:CLDN18.2",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "CLDN18.2",
+        "expected_symbol": "CLDN18",
+        "resolved": {
+          "query": "CLDN18.2",
+          "normalized_alias": "CLDN18.2",
+          "official_symbol": "CLDN18",
+          "entrez_gene_id": 51208,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": "isoform_limited",
+          "warnings": [
+            "CLDN18.2 maps to gene CLDN18 only. Gene-collapsed RNA/protein cannot distinguish CLDN18.2 from CLDN18.1. Do not treat results as isoform-positive."
+          ],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 51208,
+            "hugoGeneSymbol": "CLDN18",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:Claudin18.2",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "Claudin18.2",
+        "expected_symbol": "CLDN18",
+        "resolved": {
+          "query": "Claudin18.2",
+          "normalized_alias": "CLAUDIN18.2",
+          "official_symbol": "CLDN18",
+          "entrez_gene_id": 51208,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": "isoform_limited",
+          "warnings": [
+            "CLDN18.2 maps to gene CLDN18 only. Gene-collapsed RNA/protein cannot distinguish CLDN18.2 from CLDN18.1. Do not treat results as isoform-positive."
+          ],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 51208,
+            "hugoGeneSymbol": "CLDN18",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:HER2",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "HER2",
+        "expected_symbol": "ERBB2",
+        "resolved": {
+          "query": "HER2",
+          "normalized_alias": "HER2",
+          "official_symbol": "ERBB2",
+          "entrez_gene_id": 2064,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 2064,
+            "hugoGeneSymbol": "ERBB2",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:EGFR",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "EGFR",
+        "expected_symbol": "EGFR",
+        "resolved": {
+          "query": "EGFR",
+          "normalized_alias": "EGFR",
+          "official_symbol": "EGFR",
+          "entrez_gene_id": 1956,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 1956,
+            "hugoGeneSymbol": "EGFR",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:PSMA",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "PSMA",
+        "expected_symbol": "FOLH1",
+        "resolved": {
+          "query": "PSMA",
+          "normalized_alias": "PSMA",
+          "official_symbol": "FOLH1",
+          "entrez_gene_id": 2346,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 2346,
+            "hugoGeneSymbol": "FOLH1",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:STEAP1",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "STEAP1",
+        "expected_symbol": "STEAP1",
+        "resolved": {
+          "query": "STEAP1",
+          "normalized_alias": "STEAP1",
+          "official_symbol": "STEAP1",
+          "entrez_gene_id": 26872,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 26872,
+            "hugoGeneSymbol": "STEAP1",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:MSLN",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "MSLN",
+        "expected_symbol": "MSLN",
+        "resolved": {
+          "query": "MSLN",
+          "normalized_alias": "MSLN",
+          "official_symbol": "MSLN",
+          "entrez_gene_id": 10232,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 10232,
+            "hugoGeneSymbol": "MSLN",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:B7-H3",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "B7-H3",
+        "expected_symbol": "CD276",
+        "resolved": {
+          "query": "B7-H3",
+          "normalized_alias": "B7-H3",
+          "official_symbol": "CD276",
+          "entrez_gene_id": 80381,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 80381,
+            "hugoGeneSymbol": "CD276",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:TROP2",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "TROP2",
+        "expected_symbol": "TACSTD2",
+        "resolved": {
+          "query": "TROP2",
+          "normalized_alias": "TROP2",
+          "official_symbol": "TACSTD2",
+          "entrez_gene_id": 4070,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 4070,
+            "hugoGeneSymbol": "TACSTD2",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:CD19",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "CD19",
+        "expected_symbol": "CD19",
+        "resolved": {
+          "query": "CD19",
+          "normalized_alias": "CD19",
+          "official_symbol": "CD19",
+          "entrez_gene_id": 930,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 930,
+            "hugoGeneSymbol": "CD19",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:GPRC5D",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "GPRC5D",
+        "expected_symbol": "GPRC5D",
+        "resolved": {
+          "query": "GPRC5D",
+          "normalized_alias": "GPRC5D",
+          "official_symbol": "GPRC5D",
+          "entrez_gene_id": 55507,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 55507,
+            "hugoGeneSymbol": "GPRC5D",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:DLL3",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "DLL3",
+        "expected_symbol": "DLL3",
+        "resolved": {
+          "query": "DLL3",
+          "normalized_alias": "DLL3",
+          "official_symbol": "DLL3",
+          "entrez_gene_id": 10683,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 10683,
+            "hugoGeneSymbol": "DLL3",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:FAP",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "FAP",
+        "expected_symbol": "FAP",
+        "resolved": {
+          "query": "FAP",
+          "normalized_alias": "FAP",
+          "official_symbol": "FAP",
+          "entrez_gene_id": 2191,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [
+            "FAP is often stromal/CAF-associated. Cancer cell-line lists alone do not establish CAF expression or stromal fraction."
+          ],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 2191,
+            "hugoGeneSymbol": "FAP",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:GD2",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "GD2",
+        "normalized_alias": "GD2",
+        "official_symbol": null,
+        "entrez_gene_id": null,
+        "mapping_source": "special_antigen",
+        "special_kind": "glycolipid",
+        "warnings": [
+          "GD2 is a glycolipid antigen, not a single gene product. RNA/proteomics cannot directly quantify GD2. B4GALNT1/ST8SIA1 are biosynthetic enzyme proxies only, not GD2 itself."
+        ],
+        "unresolved": true,
+        "raw_provider": {}
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:PD-1",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "PD-1",
+        "expected_symbol": "PDCD1",
+        "resolved": {
+          "query": "PD-1",
+          "normalized_alias": "PD-1",
+          "official_symbol": "PDCD1",
+          "entrez_gene_id": 5133,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 5133,
+            "hugoGeneSymbol": "PDCD1",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "alias:4-1BB",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "not_applicable",
+      "detail": {
+        "query": "4-1BB",
+        "expected_symbol": "TNFRSF9",
+        "resolved": {
+          "query": "4-1BB",
+          "normalized_alias": "4-1BB",
+          "official_symbol": "TNFRSF9",
+          "entrez_gene_id": 3604,
+          "mapping_source": "cbioportal_genes",
+          "special_kind": null,
+          "warnings": [],
+          "unresolved": false,
+          "raw_provider": {
+            "entrezGeneId": 3604,
+            "hugoGeneSymbol": "TNFRSF9",
+            "type": "protein-coding"
+          }
+        }
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    }
+  ],
+  "alias_summary": {
+    "n": 25,
+    "n_pass": 25,
+    "n_fail": 0
+  },
+  "summary": {
+    "pass": 25,
+    "mismatch": 0,
+    "fetch_failed": 0,
+    "data_insufficient": 0,
+    "held": 0,
+    "pending": 0,
+    "total": 25,
+    "fidelity_pass": 25,
+    "fidelity_fail": 0,
+    "biology_pass_direction": 0,
+    "biology_mismatch_direction": 0
+  }
+}
