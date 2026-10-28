@@ -75,7 +75,7 @@ def init_state() -> None:
         "cell_lines": None,
         "cell_assay": "depmap_25q3_rna",
         "selected_lines": [],
-        "top20": None,
+        "top20_result": None,
         "sc_dataset": None,
         "sc_result": None,
         "validation_run": None,
@@ -138,7 +138,7 @@ def resolve_and_store(query: str) -> None:
         st.session_state.resolved = resolved.to_dict()
         st.session_state.bulk = None
         st.session_state.cell_lines = None
-        st.session_state.top20 = None
+        st.session_state.top20_result = None
         st.session_state.selected_lines = []
         elapsed = time.time() - t0
         status.update(label=f"Resolved in {elapsed:.1f}s", state="complete")
@@ -201,7 +201,7 @@ def main() -> None:
             st.session_state.resolved = None
             st.session_state.bulk = None
             st.session_state.cell_lines = None
-            st.session_state.top20 = None
+            st.session_state.top20_result = None
 
     st.write("Quick start:")
     qs1, qs2 = st.columns([3, 1])
@@ -313,13 +313,13 @@ def main() -> None:
                 "Cohort for Top 20",
                 options=[TCGA_STUDIES[k]["study"] for k in pick] or [study_default],
             )
-            if st.button("Compute Top 20", key="top20"):
+            if st.button("Compute Top 20", key="btn_compute_top20"):
                 with st.status("Ranking panel TAAs (rate-limited)…", expanded=True) as status:
                     t0 = time.time()
                     top = rank_coelevated_taas(study, resolved["official_symbol"], int(resolved["entrez_gene_id"]))
-                    st.session_state.top20 = top
+                    st.session_state.top20_result = top
                     status.update(label=f"{top.get('status')} in {time.time()-t0:.1f}s", state="complete")
-            top = st.session_state.top20
+            top = st.session_state.top20_result
             if top:
                 if top.get("status") != "ok":
                     st.warning(f"{top.get('status')}: {top.get('error')}")
