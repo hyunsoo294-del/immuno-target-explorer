@@ -1,0 +1,105 @@
+{
+  "run_id": "747ca598",
+  "started_at": "2026-10-28T04:04:45Z",
+  "finished_at": null,
+  "app_version": "0.2.0",
+  "checks": [
+    {
+      "name": "her2_regression:depmap_25q3_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "pass_direction",
+      "detail": {
+        "assay": "depmap_25q3_rna",
+        "diffs": {
+          "ZR751_BREAST": {
+            "expected": 6.7664,
+            "got": 6.7664,
+            "abs_diff": 0.0
+          },
+          "MDAMB231_BREAST": {
+            "expected": 4.5967,
+            "got": 4.5967,
+            "abs_diff": 0.0
+          }
+        },
+        "tolerance_abs": 0.0001,
+        "n_measured": 1600,
+        "retrieved_at": "2026-10-28T04:04:45Z",
+        "checksum": "3b90d342c552d901",
+        "note": "RNA fidelity check against 2026-10-20 regression snapshot",
+        "source_release_note": "Compare to 2026-10-20 snapshot; source may update \u2014 record reason if changed."
+      },
+      "recorded_at": "2026-10-28T04:04:45Z"
+    },
+    {
+      "name": "her2_regression:ccle_2019_rna",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "n/a",
+      "detail": {
+        "assay": "ccle_2019_rna",
+        "diffs": {
+          "ZR751_BREAST": {
+            "expected": 53.7175,
+            "got": 53.7175,
+            "abs_diff": 0.0
+          },
+          "MDAMB231_BREAST": {
+            "expected": 12.8311,
+            "got": 12.8311,
+            "abs_diff": 0.0
+          }
+        },
+        "tolerance_abs": 0.0001,
+        "n_measured": 1156,
+        "retrieved_at": "2026-10-28T04:04:45Z",
+        "checksum": "38362e94817ea56a",
+        "note": "RNA fidelity check against 2026-10-20 regression snapshot",
+        "source_release_note": "Compare to 2026-10-20 snapshot; source may update \u2014 record reason if changed."
+      },
+      "recorded_at": "2026-10-28T04:04:46Z"
+    },
+    {
+      "name": "her2_regression:ccle_2019_protein",
+      "status": "pass",
+      "data_fidelity": "pass",
+      "biology_concordance": "mismatch_vs_surface_literature",
+      "detail": {
+        "assay": "ccle_2019_protein",
+        "diffs": {
+          "ZR751_BREAST": {
+            "expected": 0.8146,
+            "got": 0.8146,
+            "abs_diff": 0.0
+          },
+          "MDAMB231_BREAST": {
+            "expected": 1.2413,
+            "got": 1.2413,
+            "abs_diff": 0.0
+          }
+        },
+        "tolerance_abs": 0.0001,
+        "n_measured": 375,
+        "retrieved_at": "2026-10-28T04:04:46Z",
+        "checksum": "f79b09c92ed7f733",
+        "note": "Whole-cell protein relative values need not match surface receptors/cell. Do not swap values to force surface order.",
+        "source_release_note": "Compare to 2026-10-20 snapshot; source may update \u2014 record reason if changed."
+      },
+      "recorded_at": "2026-10-28T04:04:46Z"
+    }
+  ],
+  "summary": {
+    "pass": 3,
+    "mismatch": 0,
+    "fetch_failed": 0,
+    "data_insufficient": 0,
+    "held": 0,
+    "pending": 0,
+    "total": 3,
+    "fidelity_pass": 3,
+    "fidelity_fail": 0,
+    "biology_pass_direction": 1,
+    "biology_mismatch_direction": 1
+  }
+}

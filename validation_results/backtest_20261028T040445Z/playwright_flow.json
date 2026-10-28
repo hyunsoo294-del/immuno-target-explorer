@@ -1,0 +1,35 @@
+{
+  "url": "https://peninsula-fairfield-lucas-cleared.trycloudflare.com",
+  "pass": 7,
+  "fail": 0,
+  "steps": [
+    {
+      "step": "home_load",
+      "status": "pass"
+    },
+    {
+      "step": "her2_resolve",
+      "status": "pass"
+    },
+    {
+      "step": "her2_cell_lines",
+      "status": "pass"
+    },
+    {
+      "step": "trop2_alias",
+      "status": "pass"
+    },
+    {
+      "step": "cldn18_2_warning",
+      "status": "pass"
+    },
+    {
+      "step": "gd2_glycolipid",
+      "status": "pass"
+    },
+    {
+      "step": "validation_section",
+      "status": "pass"
+    }
+  ]
+}

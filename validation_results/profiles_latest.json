@@ -1,6 +1,6 @@
 {
-  "run_id": "10149155",
-  "started_at": "2026-10-28T00:46:36Z",
+  "run_id": "933471df",
+  "started_at": "2026-10-28T04:04:50Z",
   "finished_at": null,
   "app_version": "0.2.0",
   "checks": [
@@ -13,7 +13,7 @@
         "symbol": "ERBB2",
         "entrez": 2064,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:36Z",
+        "retrieved_at": "2026-10-28T04:04:50Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -39,7 +39,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:36Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:HER2:ccle_2019_rna",
@@ -50,7 +50,7 @@
         "symbol": "ERBB2",
         "entrez": 2064,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:36Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -76,7 +76,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:36Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:HER2:ccle_2019_protein",
@@ -87,7 +87,7 @@
         "symbol": "ERBB2",
         "entrez": 2064,
         "n_measured": 375,
-        "retrieved_at": "2026-10-28T00:46:36Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -113,7 +113,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:36Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:EGFR:depmap_25q3_rna",
@@ -124,7 +124,7 @@
         "symbol": "EGFR",
         "entrez": 1956,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:36Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -149,7 +149,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:36Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:EGFR:ccle_2019_rna",
@@ -160,7 +160,7 @@
         "symbol": "EGFR",
         "entrez": 1956,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:36Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -185,7 +185,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:36Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:EGFR:ccle_2019_protein",
@@ -196,7 +196,7 @@
         "symbol": "EGFR",
         "entrez": 1956,
         "n_measured": 375,
-        "retrieved_at": "2026-10-28T00:46:36Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -221,7 +221,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:37Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:PSMA:depmap_25q3_rna",
@@ -232,7 +232,7 @@
         "symbol": "FOLH1",
         "entrez": 2346,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:37Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -258,7 +258,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:37Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:PSMA:ccle_2019_rna",
@@ -269,7 +269,7 @@
         "symbol": "FOLH1",
         "entrez": 2346,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:37Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -295,7 +295,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:37Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:PSMA:ccle_2019_protein",
@@ -306,7 +306,7 @@
         "symbol": "FOLH1",
         "entrez": 2346,
         "n_measured": 53,
-        "retrieved_at": "2026-10-28T00:46:37Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -332,7 +332,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:37Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:STEAP1:depmap_25q3_rna",
@@ -343,7 +343,7 @@
         "symbol": "STEAP1",
         "entrez": 26872,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:37Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -368,7 +368,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:38Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:STEAP1:ccle_2019_rna",
@@ -379,7 +379,7 @@
         "symbol": "STEAP1",
         "entrez": 26872,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:38Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -404,7 +404,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:38Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:STEAP1:ccle_2019_protein",
@@ -415,7 +415,7 @@
         "symbol": "STEAP1",
         "entrez": 26872,
         "n_measured": 269,
-        "retrieved_at": "2026-10-28T00:46:38Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -440,7 +440,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:38Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:MSLN:depmap_25q3_rna",
@@ -451,7 +451,7 @@
         "symbol": "MSLN",
         "entrez": 10232,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:38Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -477,7 +477,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:39Z"
+      "recorded_at": "2026-10-28T04:04:51Z"
     },
     {
       "name": "profile:MSLN:ccle_2019_rna",
@@ -488,7 +488,7 @@
         "symbol": "MSLN",
         "entrez": 10232,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:39Z",
+        "retrieved_at": "2026-10-28T04:04:51Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -514,7 +514,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:39Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:MSLN:ccle_2019_protein",
@@ -525,7 +525,7 @@
         "symbol": "MSLN",
         "entrez": 10232,
         "n_measured": 339,
-        "retrieved_at": "2026-10-28T00:46:39Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -551,7 +551,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:39Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:B7-H3:depmap_25q3_rna",
@@ -562,7 +562,7 @@
         "symbol": "CD276",
         "entrez": 80381,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:39Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -587,7 +587,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:40Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:B7-H3:ccle_2019_rna",
@@ -598,7 +598,7 @@
         "symbol": "CD276",
         "entrez": 80381,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:40Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -623,7 +623,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:40Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:B7-H3:ccle_2019_protein",
@@ -634,7 +634,7 @@
         "symbol": "CD276",
         "entrez": 80381,
         "n_measured": 375,
-        "retrieved_at": "2026-10-28T00:46:40Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -659,7 +659,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:40Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:TROP2:depmap_25q3_rna",
@@ -670,7 +670,7 @@
         "symbol": "TACSTD2",
         "entrez": 4070,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:40Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -694,7 +694,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:40Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:TROP2:ccle_2019_rna",
@@ -705,7 +705,7 @@
         "symbol": "TACSTD2",
         "entrez": 4070,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:40Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -729,7 +729,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:41Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:TROP2:ccle_2019_protein",
@@ -740,7 +740,7 @@
         "symbol": "TACSTD2",
         "entrez": 4070,
         "n_measured": 375,
-        "retrieved_at": "2026-10-28T00:46:41Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -764,7 +764,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:41Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:Nectin-4:depmap_25q3_rna",
@@ -775,7 +775,7 @@
         "symbol": "NECTIN4",
         "entrez": 81607,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:41Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -799,7 +799,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:41Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:Nectin-4:ccle_2019_rna",
@@ -810,7 +810,7 @@
         "symbol": "NECTIN4",
         "entrez": 81607,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:41Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -834,7 +834,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:42Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:Nectin-4:ccle_2019_protein",
@@ -845,7 +845,7 @@
         "symbol": "NECTIN4",
         "entrez": 81607,
         "n_measured": 295,
-        "retrieved_at": "2026-10-28T00:46:42Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -869,7 +869,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:42Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:CD19:depmap_25q3_rna",
@@ -880,7 +880,7 @@
         "symbol": "CD19",
         "entrez": 930,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:42Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -906,7 +906,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:42Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:CD19:ccle_2019_rna",
@@ -917,7 +917,7 @@
         "symbol": "CD19",
         "entrez": 930,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:42Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -943,7 +943,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:42Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:CD19:ccle_2019_protein",
@@ -954,7 +954,7 @@
         "symbol": "CD19",
         "entrez": 930,
         "n_measured": 54,
-        "retrieved_at": "2026-10-28T00:46:42Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -980,7 +980,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:43Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:CD20:depmap_25q3_rna",
@@ -991,7 +991,7 @@
         "symbol": "MS4A1",
         "entrez": 931,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:43Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -1017,7 +1017,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:43Z"
+      "recorded_at": "2026-10-28T04:04:52Z"
     },
     {
       "name": "profile:CD20:ccle_2019_rna",
@@ -1028,7 +1028,7 @@
         "symbol": "MS4A1",
         "entrez": 931,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:43Z",
+        "retrieved_at": "2026-10-28T04:04:52Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -1054,7 +1054,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:43Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:CD20:ccle_2019_protein",
@@ -1065,7 +1065,7 @@
         "symbol": "MS4A1",
         "entrez": 931,
         "n_measured": 81,
-        "retrieved_at": "2026-10-28T00:46:43Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -1091,7 +1091,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:44Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:BCMA:depmap_25q3_rna",
@@ -1102,7 +1102,7 @@
         "symbol": "TNFRSF17",
         "entrez": 608,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:44Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -1128,7 +1128,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:44Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:BCMA:ccle_2019_rna",
@@ -1139,7 +1139,7 @@
         "symbol": "TNFRSF17",
         "entrez": 608,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:44Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -1165,7 +1165,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:44Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:BCMA:ccle_2019_protein",
@@ -1176,7 +1176,7 @@
         "symbol": "TNFRSF17",
         "entrez": 608,
         "n_measured": 18,
-        "retrieved_at": "2026-10-28T00:46:44Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -1202,7 +1202,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:45Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:GPRC5D:depmap_25q3_rna",
@@ -1213,7 +1213,7 @@
         "symbol": "GPRC5D",
         "entrez": 55507,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:45Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -1238,7 +1238,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:45Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:GPRC5D:ccle_2019_rna",
@@ -1249,7 +1249,7 @@
         "symbol": "GPRC5D",
         "entrez": 55507,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:45Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -1274,7 +1274,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:45Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:GPRC5D:ccle_2019_protein",
@@ -1285,7 +1285,7 @@
         "symbol": "GPRC5D",
         "entrez": 55507,
         "n_measured": 0,
-        "retrieved_at": "2026-10-28T00:46:45Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [],
         "category": "approved_cell_therapy",
@@ -1295,7 +1295,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:45Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:DLL3:depmap_25q3_rna",
@@ -1306,7 +1306,7 @@
         "symbol": "DLL3",
         "entrez": 10683,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:45Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "log2(TPM+1)",
         "biology": [
           {
@@ -1335,7 +1335,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:46Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:DLL3:ccle_2019_rna",
@@ -1346,7 +1346,7 @@
         "symbol": "DLL3",
         "entrez": 10683,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:46Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "RPKM",
         "biology": [
           {
@@ -1375,7 +1375,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:46Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:DLL3:ccle_2019_protein",
@@ -1386,7 +1386,7 @@
         "symbol": "DLL3",
         "entrez": 10683,
         "n_measured": 124,
-        "retrieved_at": "2026-10-28T00:46:46Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [
           {
@@ -1412,7 +1412,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:46Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:CEA:depmap_25q3_rna",
@@ -1423,7 +1423,7 @@
         "symbol": "CEACAM5",
         "entrez": 1048,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:46Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "log2(TPM+1)",
         "biology": [],
         "category": "clinical_development",
@@ -1434,7 +1434,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:46Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:CEA:ccle_2019_rna",
@@ -1445,7 +1445,7 @@
         "symbol": "CEACAM5",
         "entrez": 1048,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:46Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "RPKM",
         "biology": [],
         "category": "clinical_development",
@@ -1456,7 +1456,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:47Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:CEA:ccle_2019_protein",
@@ -1467,7 +1467,7 @@
         "symbol": "CEACAM5",
         "entrez": 1048,
         "n_measured": 313,
-        "retrieved_at": "2026-10-28T00:46:47Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [],
         "category": "clinical_development",
@@ -1478,7 +1478,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:47Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:FAP:depmap_25q3_rna",
@@ -1489,7 +1489,7 @@
         "symbol": "FAP",
         "entrez": 2191,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:47Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "log2(TPM+1)",
         "biology": [],
         "category": "research_stromal",
@@ -1500,7 +1500,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:47Z"
+      "recorded_at": "2026-10-28T04:04:53Z"
     },
     {
       "name": "profile:FAP:ccle_2019_rna",
@@ -1511,7 +1511,7 @@
         "symbol": "FAP",
         "entrez": 2191,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:47Z",
+        "retrieved_at": "2026-10-28T04:04:53Z",
         "unit": "RPKM",
         "biology": [],
         "category": "research_stromal",
@@ -1522,7 +1522,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:48Z"
+      "recorded_at": "2026-10-28T04:04:54Z"
     },
     {
       "name": "profile:FAP:ccle_2019_protein",
@@ -1533,7 +1533,7 @@
         "symbol": "FAP",
         "entrez": 2191,
         "n_measured": 258,
-        "retrieved_at": "2026-10-28T00:46:48Z",
+        "retrieved_at": "2026-10-28T04:04:54Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [],
         "category": "research_stromal",
@@ -1544,7 +1544,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:48Z"
+      "recorded_at": "2026-10-28T04:04:54Z"
     },
     {
       "name": "profile:CLDN18.2:depmap_25q3_rna",
@@ -1555,7 +1555,7 @@
         "symbol": "CLDN18",
         "entrez": 51208,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:48Z",
+        "retrieved_at": "2026-10-28T04:04:54Z",
         "unit": "log2(TPM+1)",
         "biology": [],
         "category": "approved_mab_context",
@@ -1566,7 +1566,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:48Z"
+      "recorded_at": "2026-10-28T04:04:54Z"
     },
     {
       "name": "profile:CLDN18.2:ccle_2019_rna",
@@ -1577,7 +1577,7 @@
         "symbol": "CLDN18",
         "entrez": 51208,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:48Z",
+        "retrieved_at": "2026-10-28T04:04:54Z",
         "unit": "RPKM",
         "biology": [],
         "category": "approved_mab_context",
@@ -1588,7 +1588,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:48Z"
+      "recorded_at": "2026-10-28T04:04:54Z"
     },
     {
       "name": "profile:CLDN18.2:ccle_2019_protein",
@@ -1599,7 +1599,7 @@
         "symbol": "CLDN18",
         "entrez": 51208,
         "n_measured": 89,
-        "retrieved_at": "2026-10-28T00:46:48Z",
+        "retrieved_at": "2026-10-28T04:04:54Z",
         "unit": "normalized relative log2 (whole-cell MS)",
         "biology": [],
         "category": "approved_mab_context",
@@ -1610,7 +1610,7 @@
         ],
         "note": "not_measured \u2260 antigen absent. Biology column compares surface-literature direction to this assay only."
       },
-      "recorded_at": "2026-10-28T00:46:49Z"
+      "recorded_at": "2026-10-28T04:04:54Z"
     },
     {
       "name": "profiles:GD2",
@@ -1620,7 +1620,7 @@
       "detail": {
         "reason": "glycolipid \u2014 no gene-level expression quantification"
       },
-      "recorded_at": "2026-10-28T00:46:49Z"
+      "recorded_at": "2026-10-28T04:04:54Z"
     }
   ],
   "summary": {

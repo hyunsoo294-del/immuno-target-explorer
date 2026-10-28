@@ -1,6 +1,6 @@
 {
-  "run_id": "7d96f709",
-  "started_at": "2026-10-28T00:46:57Z",
+  "run_id": "747ca598",
+  "started_at": "2026-10-28T04:04:45Z",
   "finished_at": null,
   "app_version": "0.2.0",
   "checks": [
@@ -25,12 +25,12 @@
         },
         "tolerance_abs": 0.0001,
         "n_measured": 1600,
-        "retrieved_at": "2026-10-28T00:46:57Z",
+        "retrieved_at": "2026-10-28T04:04:45Z",
         "checksum": "3b90d342c552d901",
         "note": "RNA fidelity check against 2026-10-20 regression snapshot",
         "source_release_note": "Compare to 2026-10-20 snapshot; source may update \u2014 record reason if changed."
       },
-      "recorded_at": "2026-10-28T00:46:57Z"
+      "recorded_at": "2026-10-28T04:04:45Z"
     },
     {
       "name": "her2_regression:ccle_2019_rna",
@@ -53,12 +53,12 @@
         },
         "tolerance_abs": 0.0001,
         "n_measured": 1156,
-        "retrieved_at": "2026-10-28T00:46:57Z",
+        "retrieved_at": "2026-10-28T04:04:45Z",
         "checksum": "38362e94817ea56a",
         "note": "RNA fidelity check against 2026-10-20 regression snapshot",
         "source_release_note": "Compare to 2026-10-20 snapshot; source may update \u2014 record reason if changed."
       },
-      "recorded_at": "2026-10-28T00:46:57Z"
+      "recorded_at": "2026-10-28T04:04:46Z"
     },
     {
       "name": "her2_regression:ccle_2019_protein",
@@ -81,12 +81,12 @@
         },
         "tolerance_abs": 0.0001,
         "n_measured": 375,
-        "retrieved_at": "2026-10-28T00:46:57Z",
+        "retrieved_at": "2026-10-28T04:04:46Z",
         "checksum": "f79b09c92ed7f733",
         "note": "Whole-cell protein relative values need not match surface receptors/cell. Do not swap values to force surface order.",
         "source_release_note": "Compare to 2026-10-20 snapshot; source may update \u2014 record reason if changed."
       },
-      "recorded_at": "2026-10-28T00:46:57Z"
+      "recorded_at": "2026-10-28T04:04:46Z"
     }
   ],
   "summary": {
